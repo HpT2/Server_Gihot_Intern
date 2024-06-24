@@ -1,14 +1,13 @@
-import { Socket } from "socket.io";
-
+import * as net from 'net';
 
 class Player{
 
-    socket : any;
+    socket : net.Socket;
     id : string;
-    constructor(socket : Socket)
+    constructor(socket : net.Socket, id : string)
     {   
         this.socket = socket;
-        this.id = socket.id;
+        this.id = id;
     }    
 }
 

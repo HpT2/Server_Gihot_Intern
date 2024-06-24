@@ -1,6 +1,6 @@
 import Player from "./player";
 import Game from "./game";
-import { Socket } from "socket.io";
+import * as net from 'net';
 
 class Room {
     firstPlayer : Player;
@@ -23,13 +23,13 @@ class Room {
     {
         if(this.locked) return false;
         this.players.push(player);
-        this.Add(player.socket);
+        this.AddListener(player.socket);
         return true;
     }
 
-    AddListener(socket : Socket)
+    AddListener(socket : net.Socket)
     {
-        socket.on("event", (msg) => {
+        socket.on("data", (msg) => {
             console.log(msg);
         });
     }

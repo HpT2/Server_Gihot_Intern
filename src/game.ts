@@ -1,4 +1,3 @@
-import { Socket } from "socket.io";
 import Player from "./player";
 import Room from "./room";
 class Game {
@@ -15,7 +14,7 @@ class Game {
     Run() : void {
         for(let i = 0; i < this.players.length; i++)
         {
-            this.players[i].socket.on("event", (data : any) => {
+            this.players[i].socket.on("data", (data : any) => {
                 console.log(data);
             });
         }
@@ -25,7 +24,7 @@ class Game {
     {
         for(let i = 0; i < this.players.length; i++)
         {
-                this.players[i].socket.emit(event, data);
+                this.players[i].socket.write('event: data');
         }
     }
 
