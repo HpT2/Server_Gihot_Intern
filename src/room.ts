@@ -3,20 +3,26 @@ import Game from "./game";
 import * as net from 'net';
 
 class Room {
-    firstPlayer : Player;
     players : Player[];
     id : string;
     locked : boolean;
     game : Game | null;
+    name : string;
+    game_mode : string;
+    Listener : (msg : string) => void ;
 
-    constructor(player : Player)
+    constructor(player : Player, name :string, game_mode : string)
     {
-        this.firstPlayer = player;
         this.id = player.id;
-        this.players = [this.firstPlayer];
+        this.players = [];
         this.locked = false;
         this.game = null;
-        this.AddListener(this.firstPlayer.socket);
+        this.name = name;
+        this.game_mode = game_mode;
+        this.Listener = (msg : string) => {
+            this.RoomListener(msg);
+        };
+        this.Add(player);
     }
 
     Add(player : Player) : boolean
@@ -29,9 +35,11 @@ class Room {
 
     AddListener(socket : net.Socket)
     {
-        socket.on("data", (msg) => {
-            console.log(msg);
-        });
+        socket.on("data", this.Listener);
+    }
+
+    RoomListener(msg : string) : void {
+        //console.log(msg);
     }
 
     RemovePlayer(id : string)
@@ -45,6 +53,7 @@ class Room {
 
     DeleteRoom()
     {
+        for(let i = 0; i < this.players.length; i++) this.players[i].socket.removeListener('data', this.Listener);
         this.players = [];
     }
 
