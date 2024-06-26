@@ -15,8 +15,8 @@ const server = dgram.createSocket('udp4');
 server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
         //parse data
         const receivedData = data.toString('utf-8');
-        let json : any = JSON.parse(receivedData);
         console.log(`Received from client (${rInfo.address}:${rInfo.port}): ${receivedData}`);
+        let json : any = JSON.parse(receivedData);
 
         //process event
         switch(json._event.event_name)
@@ -62,8 +62,8 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                     player_id : join_player.id,
                     player_name : join_player.name
                 }
-                server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, join_player.port, join_player.address);
-                
+                server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, host_player.port, host_player.address);
+
                 break;
         };
     });
