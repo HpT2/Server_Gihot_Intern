@@ -10,21 +10,6 @@ var Rooms : Room[] = [];
 
 const server = dgram.createSocket('udp4');
 
-server.on("message", (message: Buffer, rInfo : dgram.RemoteInfo) => {
-    console.log(`Client: (${rInfo.address}:${rInfo.port}) connected`);
-
-    //player first connect => provide a specific id and add to online players
-    let playerID : string = v4();
-    let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, "quoc");
-    onlinePlayers.push(thisPlayer);
-    let data = {
-        event_name : "provide id",
-        id : playerID,
-        player_name : thisPlayer.name
-    }
-    
-    server.send(JSON.stringify(data), 0, JSON.stringify(data).length, rInfo.port, rInfo.address);
-} );
 
 //Handle request from clients
 server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
@@ -36,6 +21,21 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
         //process event
         switch(json._event.event_name)
         {
+            case 'first connect':
+                console.log(`Client: (${rInfo.address}:${rInfo.port}) connected`);
+
+                //player first connect => provide a specific id and add to online players
+                let playerID : string = v4();
+                let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, "quoc");
+                onlinePlayers.push(thisPlayer);
+                let d = {
+                    event_name : "provide id",
+                    id : playerID,
+                    player_name : thisPlayer.name
+                }
+                
+                server.send(JSON.stringify(d), 0, JSON.stringify(d).length, rInfo.port, rInfo.address);
+                break;
             //create room
             case 'create_rooms':
                 let player : Player = GetPlayerByID(json.player_id, onlinePlayers);
