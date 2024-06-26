@@ -30,7 +30,7 @@ class Room {
     {
         if(this.locked) return false;
         this.players.push(player);
-        this.AddListener(player.socket);
+        //this.AddListener(player);
         return true;
     }
 
@@ -81,7 +81,7 @@ class Room {
 
     DeleteRoom()
     {
-        for(let i = 0; i < this.players.length; i++) this.players[i].socket.removeListener('data', this.Listener);
+        //for(let i = 0; i < this.players.length; i++) this.players[i].socket.removeListener('data', this.Listener);
         this.players = [];
     }
 

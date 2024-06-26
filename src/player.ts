@@ -2,13 +2,16 @@ import * as net from 'net';
 
 class Player{
 
-    name : string = "quoc";
-    socket : net.Socket;
+    name : string;
+    address : string;
+    port : number;
     id : string;
-    constructor(socket : net.Socket, id : string)
+    constructor(id : string, address : string, port : number, name : string = "quoc")
     {   
-        this.socket = socket;
+        this.name = name;
         this.id = id;
+        this.address = address;
+        this.port = port;
     }    
 }
 

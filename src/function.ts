@@ -1,21 +1,22 @@
 import * as net from 'net'
 import Player from './player';
 import Room from './room';
-
+import * as dgram from 'dgram';
 export function GetPlayerByID(id : string, onlinePlayers : Player[]) : Player 
 {
     let i : number = onlinePlayers.findIndex((player) => player.id == id);
     return onlinePlayers[i];
 }
 
-export function SendRoomsInfoToClient(socket : net.Socket, Rooms : Room[])
+export function SendRoomsInfoToClient(server : dgram.Socket, Rooms : Room[], address : string, port : number)
 {
     let data =  {
         event_name : 'rooms',
         rooms : GetRoomsInfo(Rooms)
     }
     console.log(data);
-    socket.write(JSON.stringify(data));
+    let msg = JSON.stringify(data);
+    server.send(msg, 0, msg.length, port, address);
 }
 
 function GetRoomsInfo(Rooms : Room[]) : any

@@ -31,7 +31,7 @@ class Game {
     }
 
     AddListener(player : Player) {
-        player.socket.on('data', this.Listener);
+       
     }
 
     GameListener(data : Buffer) : void {
@@ -43,7 +43,7 @@ class Game {
     {
         for(let i = 0; i < this.players.length; i++)
         {
-            this.players[i].socket.write('event: data');
+            
         }
     }
 
@@ -56,8 +56,6 @@ class Game {
             clearTimeout(this.spawner);
             this.spawner = null;
         }
-
-        for(let i = 0; i < this.players.length; i++) this.players[i].socket.removeListener('data', this.Listener);
 
         this.room.Done();
     }
