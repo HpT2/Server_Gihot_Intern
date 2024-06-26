@@ -2,6 +2,7 @@ import Room from "./src/room";
 import Player from "./src/player";
 import * as net from "net";
 import {v4} from 'uuid';
+import { SendRoomsInfoToClient, GetPlayerByID } from "./src/function";
 
 var onlinePlayers : Player[] = [];
 var Rooms : Room[] = [];
@@ -31,23 +32,17 @@ const server = net.createServer((socket: net.Socket) => {
         {
             //create room
             case 'create_rooms':
-                let player : Player | undefined  = GetPlayerByID(json.player_id);
+                let player : Player | undefined  = GetPlayerByID(json.player_id, onlinePlayers);
                 if(player) {
                     Rooms.splice(0, 0, new Room(player, json._event.name, json._event.game_mode));
-                    //console.log(JSON.stringify(Rooms));
                 }
                 break;
             //get available room
             case 'get_rooms':
-                let data =  {
-                    event_name : 'rooms',
-                    rooms : GetRoomsInfo()
-                }
-                console.log(data);
-                socket.write(JSON.stringify(data));
+                SendRoomsInfoToClient(socket, Rooms);
                 break;
             //join room
-            case 'join_rooms':
+            case 'join_room':
                 break;
         };
     });
@@ -69,27 +64,10 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server listening on all interfaces at port ${PORT}`);
 });
 
-function GetPlayerByID(id : string) : Player | undefined
-{
-    return onlinePlayers.find((player) => player.id == id);
+//support functions
+var RemoveRoom = (room_id : string) => {
+    let room_index : number = Rooms.findIndex((room) => room.id == room_id);
+    if(room_index > -1) Rooms.splice(room_index, 1);
 }
 
-function GetRoomsInfo() : any
-{
-    let infos : any[] = [];
-    for(let i = 0 ; i < Rooms.length ; i++)
-    {
-        if(Rooms[i].locked) continue;
-        let info : {
-            id : string,
-            name : string,
-            game_mode : string
-        } =  {
-            id : Rooms[i].id,
-            name : Rooms[i].name,
-            game_mode : Rooms[i].game_mode
-        };
-        infos.push(info);
-    }
-    return infos;
-}
+export default RemoveRoom;

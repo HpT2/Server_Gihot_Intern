@@ -5,7 +5,7 @@ class Game {
     players : Player[];
     room : Room;
     spawner : NodeJS.Timeout | null;
-    Listener : (msg : string) => void;
+    Listener : (msg : Buffer) => void;
 
     constructor(players : Player[], room : Room)
     {
@@ -13,7 +13,7 @@ class Game {
         this.room = room;
         this.spawner = null;
 
-        this.Listener = (msg : string) => {
+        this.Listener = (msg : Buffer) => {
             this.GameListener(msg);
         };
 
@@ -34,8 +34,9 @@ class Game {
         player.socket.on('data', this.Listener);
     }
 
-    GameListener(msg :string) : void {
-        console.log(msg);
+    GameListener(data : Buffer) : void {
+        const receivedData = data.toString('utf-8');
+        let json : any = JSON.parse(receivedData);
     }
 
     EmitToAllPlayer(event: string, data : any)

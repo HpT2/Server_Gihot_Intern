@@ -10,7 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "socket.io": "^4.7.5",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

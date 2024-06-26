@@ -1,6 +1,7 @@
 import Player from "./player";
 import Game from "./game";
 import * as net from 'net';
+import RemoveRoom from "../start_server";
 
 class Room {
     players : Player[];
@@ -9,7 +10,7 @@ class Room {
     game : Game | null;
     name : string;
     game_mode : string;
-    Listener : (msg : string) => void ;
+    Listener : (msg : Buffer) => void ;
 
     constructor(player : Player, name :string, game_mode : string)
     {
@@ -19,7 +20,7 @@ class Room {
         this.game = null;
         this.name = name;
         this.game_mode = game_mode;
-        this.Listener = (msg : string) => {
+        this.Listener = (msg : Buffer) => {
             this.RoomListener(msg);
         };
         this.Add(player);
@@ -38,8 +39,23 @@ class Room {
         socket.on("data", this.Listener);
     }
 
-    RoomListener(msg : string) : void {
-        //console.log(msg);
+    RoomListener(data : Buffer) : void {
+        //parse data
+        const receivedData = data.toString('utf-8');
+        let json : any = JSON.parse(receivedData);
+
+        switch(json._event.event_name)
+        {
+            case 'start':
+                break;
+            case 'ready':
+                break;
+            case 'kick':
+                break;
+            case 'out':
+                this.PlayerOutRoom(json.player_id);
+                break;
+        }
     }
 
     RemovePlayer(id : string)
@@ -49,6 +65,18 @@ class Room {
         });
 
         this.players.splice(index);
+    }
+
+    PlayerOutRoom(player_id : string)
+    {
+        if(player_id == this.id) {
+            this.players = [];
+            RemoveRoom(this.id);
+        }
+        else {
+            this.RemovePlayer(player_id);
+        }
+        //send sth back to confirm
     }
 
     DeleteRoom()
