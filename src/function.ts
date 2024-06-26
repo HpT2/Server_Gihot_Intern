@@ -2,9 +2,10 @@ import * as net from 'net'
 import Player from './player';
 import Room from './room';
 
-export function GetPlayerByID(id : string, onlinePlayers : Player[]) : Player | undefined
+export function GetPlayerByID(id : string, onlinePlayers : Player[]) : Player 
 {
-    return onlinePlayers.find((player) => player.id == id);
+    let i : number = onlinePlayers.findIndex((player) => player.id == id);
+    return onlinePlayers[i];
 }
 
 export function SendRoomsInfoToClient(socket : net.Socket, Rooms : Room[])
@@ -35,5 +36,11 @@ function GetRoomsInfo(Rooms : Room[]) : any
         infos.push(info);
     }
     return infos;
+}
+
+export function GetRoomById(id : string, rooms : Room[]) : Room
+{
+    let i : number = rooms.findIndex((room) => id == room.id);
+    return rooms[i];
 }
 
