@@ -1,27 +1,29 @@
 import Player from "./player";
 import Game from "./game";
-import * as net from 'net';
+import * as dgram from 'dgram';
 import RemoveRoom from "../start_server";
 
 class Room {
-    players : Player[];
+    players : Map<string, Player>;
     id : string;
     locked : boolean;
     game : Game | null;
     name : string;
     game_mode : string;
-    Listener : (msg : Buffer) => void ;
+    Listener : (msg : Buffer, rInfo : dgram.RemoteInfo) => void;
+    server : dgram.Socket;
 
-    constructor(player : Player, name :string, game_mode : string)
+    constructor(player : Player, name :string, game_mode : string, server : dgram.Socket)
     {
         this.id = player.id;
-        this.players = [];
+        this.players = new Map<string, Player>();
         this.locked = false;
         this.game = null;
         this.name = name;
         this.game_mode = game_mode;
-        this.Listener = (msg : Buffer) => {
-            this.RoomListener(msg);
+        this.server = server;
+        this.Listener = (msg : Buffer, rInfo : dgram.RemoteInfo) => {
+            this.RoomListener(msg, rInfo);
         };
         this.Add(player);
     }
@@ -29,20 +31,22 @@ class Room {
     Add(player : Player) : boolean
     {
         if(this.locked) return false;
-        this.players.push(player);
+        this.players.set(player.id, player);
         //this.AddListener(player);
         return true;
     }
 
-    AddListener(socket : net.Socket)
+    AddListener(player : Player)
     {
-        socket.on("data", this.Listener);
+        this.server.on("message", this.Listener);
     }
 
-    RoomListener(data : Buffer) : void {
+    RoomListener(data : Buffer, rInfo : dgram.RemoteInfo) : void {
+        
         //parse data
         const receivedData = data.toString('utf-8');
         let json : any = JSON.parse(receivedData);
+        if(!this.players.get(json.player_id)) return;
 
         switch(json._event.event_name)
         {
@@ -60,18 +64,13 @@ class Room {
 
     RemovePlayer(id : string)
     {
-        let index : number = this.players.findIndex((player) => {
-            return player.id == id;
-        });
-
-        this.players.splice(index);
+        this.players.delete(id);
     }
 
     PlayerOutRoom(player_id : string)
     {
         if(player_id == this.id) {
-            this.players = [];
-            RemoveRoom(this.id);
+            this.DeleteRoom();
         }
         else {
             this.RemovePlayer(player_id);
@@ -82,7 +81,9 @@ class Room {
     DeleteRoom()
     {
         //for(let i = 0; i < this.players.length; i++) this.players[i].socket.removeListener('data', this.Listener);
-        this.players = [];
+        this.players.clear();
+        this.server.removeListener('message', this.Listener);
+        RemoveRoom(this.id);
     }
 
     StartGame()

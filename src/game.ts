@@ -7,17 +7,15 @@ class Game {
     spawner : NodeJS.Timeout | null;
     Listener : (msg : Buffer) => void;
 
-    constructor(players : Player[], room : Room)
+    constructor(players : Map<string, Player>, room : Room)
     {
-        this.players = players;
+        this.players = Array.from(players.values());
         this.room = room;
         this.spawner = null;
 
         this.Listener = (msg : Buffer) => {
             this.GameListener(msg);
         };
-
-        for(let i = 0; i < players.length; i++) this.AddListener(players[i]);
     }
 
     Run() : void {

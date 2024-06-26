@@ -2,25 +2,22 @@ import * as net from 'net'
 import Player from './player';
 import Room from './room';
 import * as dgram from 'dgram';
-export function GetPlayerByID(id : string, onlinePlayers : Player[]) : Player 
-{
-    let i : number = onlinePlayers.findIndex((player) => player.id == id);
-    return onlinePlayers[i];
-}
 
-export function SendRoomsInfoToClient(server : dgram.Socket, Rooms : Room[], address : string, port : number)
+export function SendRoomsInfoToClient(server : dgram.Socket, Rooms : Map<string, Room>, address : string, port : number)
 {
+    let rooms : Room[] | undefined = Array.from(Rooms.values());
     let data =  {
         event_name : 'rooms',
-        rooms : GetRoomsInfo(Rooms)
+        rooms : GetRoomsInfo(rooms)
     }
     console.log(data);
     let msg = JSON.stringify(data);
     server.send(msg, 0, msg.length, port, address);
 }
 
-function GetRoomsInfo(Rooms : Room[]) : any
+function GetRoomsInfo(Rooms : Room[] | undefined) : any
 {
+    if(!Rooms) return ;
     let infos : any[] = [];
     for(let i = 0 ; i < Rooms.length ; i++)
     {
@@ -39,9 +36,5 @@ function GetRoomsInfo(Rooms : Room[]) : any
     return infos;
 }
 
-export function GetRoomById(id : string, rooms : Room[]) : Room
-{
-    let i : number = rooms.findIndex((room) => id == room.id);
-    return rooms[i];
-}
+
 
