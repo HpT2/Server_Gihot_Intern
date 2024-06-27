@@ -51,3 +51,6 @@ export function GetPlayersInfo(players : Map<string, Player>) : any
     return data;
 }
 
+export function GetRandom(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}

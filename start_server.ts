@@ -1,5 +1,6 @@
 import Room from "./src/room";
 import Player from "./src/player";
+import Creep from "./src/creep";
 import * as dgram from "dgram";
 import {v4} from 'uuid';
 import { SendRoomsInfoToClient, GetPlayersInfo } from "./src/function";
@@ -32,6 +33,11 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 }
                 
                 server.send(JSON.stringify(d), 0, JSON.stringify(d).length, rInfo.port, rInfo.address);
+
+                //Just test
+                Creep.getInstance().OnRoomCreate();
+                Creep.getInstance().StartSpawnProcess(0, server, rInfo.port, rInfo.address);
+
                 break;
             //create room
             case 'create_rooms':
@@ -84,8 +90,9 @@ server.on('listening', () => {
 server.bind(PORT, '0.0.0.0');
 // server.setSendBufferSize(64 * 1024);
 
-setTimeout(() => {
+setInterval(() => {
     //test spawning creep
+    //server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, player.port, player.address);
 }, 1000);
 
 //support functions
