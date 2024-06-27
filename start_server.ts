@@ -84,6 +84,9 @@ server.on('listening', () => {
 server.bind(PORT, '0.0.0.0');
 // server.setSendBufferSize(64 * 1024);
 
+setTimeout(() => {
+    //test spawning creep
+}, 1000);
 
 //support functions
 var RemoveRoom = (room_id : string) => {
