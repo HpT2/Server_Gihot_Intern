@@ -44,9 +44,13 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 break;
             //join room
             case 'join_room':
-                //send host info to join player
+                //Get info
                 let room : Room | undefined  = Rooms.get(json._event.room_id);
                 let players : Map<string, Player>  = room ? room.players : new Map<string, Player>();
+                let join_player : Player | undefined = onlinePlayers.get(json.player_id);
+                if(join_player) room?.Add(join_player);
+
+                //send host info to join player
                 let data = {
                     event_name : "joined",
                     players : players ? GetPlayersInfo(players) : null
@@ -54,7 +58,6 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 server.send(JSON.stringify(data), 0, JSON.stringify(data).length, rInfo.port, rInfo.address);
                 
                 //send join player info to other players in room
-                let join_player : Player | undefined = onlinePlayers.get(json.player_id);
                 let data1 = {
                     event_name : "new player join",
                     player_id : join_player?.id,
@@ -63,7 +66,9 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 for(const [key, player] of players){
                     server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, player.port, player.address);
                 }
-                if(join_player) room?.Add(join_player);
+                
+                console.log(GetPlayersInfo(players));
+                
                 break;
         };
     });
