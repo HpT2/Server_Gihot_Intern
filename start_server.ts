@@ -35,8 +35,8 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 server.send(JSON.stringify(d), 0, JSON.stringify(d).length, rInfo.port, rInfo.address);
 
                 //Just test
-                Creep.getInstance().OnRoomCreate();
-                Creep.getInstance().StartSpawnProcess(0, server, rInfo.port, rInfo.address);
+                Creep.getInstance().OnRoomCreateMock();
+                Creep.getInstance().StartSpawnProcessMock(0, server, rInfo.port, rInfo.address);
 
                 break;
             //create room
