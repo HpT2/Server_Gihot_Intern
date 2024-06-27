@@ -64,7 +64,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                     player_name : join_player?.name
                 }
                 for(const [key, player] of players){
-                    server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, player.port, player.address);
+                    if(key != json.player_id) server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, player.port, player.address);
                 }
                 
                 console.log(GetPlayersInfo(players));
