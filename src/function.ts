@@ -36,5 +36,18 @@ function GetRoomsInfo(Rooms : Room[] | undefined) : any
     return infos;
 }
 
+export function GetPlayersInfo(players : Map<string, Player>) : any
+{
+    let data : any[] = [];
+    for(const [key, player] of players)
+    {
+        data.push({
+            player_id : player.id,
+            player_name : player.name
+        });
+    }
 
+
+    return data;
+}
 
