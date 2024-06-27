@@ -67,6 +67,7 @@ class Creep{
                 y: 1.0,
                 z: GetRandom(-38,38)
             },
+            spawnNum: this.creepsToSpawn[id].spawnRate,
             time: Date.now() - this.roomTimeCounts[roomId]
         }
         server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, port, address, () => {console.log(`Send to client ${address}:${port}: ${JSON.stringify(sendData)}`);})
@@ -77,26 +78,14 @@ class Creep{
 
     //Mock player
     public StartSpawnProcess(roomId: number, server: dgram.Socket, port: number, address: string) {
-        // this.roomKeepSpawns[roomId] = true;
-        // this.roomTimeCounts[roomId] = Date.now();
-        // for (let i = 0; i < this.creepsToSpawn.length; i++) {
-        //     const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
-        //     setTimeout(() => {
-        //         this.SpawnCreepByIdRepeat(i, roomId, server, port, address)
-        //     }, initialDelay);
-        // }
-
-        let sendData = {
-            event_name : "spawn creep",
-            creepTypeInt: 0,
-            spawnPos: {
-                x: GetRandom(-38,38),
-                y: 1.0,
-                z: GetRandom(-38,38)
-            },
-            time: Date.now() - this.roomTimeCounts[roomId]
+        this.roomKeepSpawns[roomId] = true;
+        this.roomTimeCounts[roomId] = Date.now();
+        for (let i = 0; i < this.creepsToSpawn.length; i++) {
+            const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
+            setTimeout(() => {
+                this.SpawnCreepByIdRepeat(i, roomId, server, port, address)
+            }, initialDelay);
         }
-        server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, port, address, () => {console.log(`Send to client ${address}:${port}: ${JSON.stringify(sendData)}`);})
     }
 }
 
