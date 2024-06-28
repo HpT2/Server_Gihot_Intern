@@ -50,7 +50,25 @@ class Room {
                 break;
             case 'ready':
                 break;
-            case 'kick':
+            case 'kick_player':
+                let kickedplayer:Player | undefined =this.players.get(json._event.player_id);
+                this.RemovePlayer(json._event.player_id);
+                
+                let data = {
+                    event_name : 'kicked',
+                }
+                if(kickedplayer) this.server.send(JSON.stringify(data), 0, JSON.stringify(data).length, kickedplayer.port, kickedplayer.address);
+
+                let data1={
+                    event_name : 'kick',
+                    player_id : json._event.player_id,
+                    host_id: json._event.host_id
+                }
+                for(const [key, player] of this.players){
+                    
+                    this.server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, player.port, player.address);
+                }
+                console.log(data1);
                 break;
             case 'out':
                 this.PlayerOutRoom(json.player_id);
