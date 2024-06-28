@@ -70,7 +70,7 @@ class Room {
                 }
                 console.log(data1);
                 break;
-            case 'out':
+            case 'leave':
                 this.PlayerOutRoom(json.player_id);
                 break;
         }
@@ -88,6 +88,14 @@ class Room {
         }
         else {
             this.RemovePlayer(player_id);
+            let data : any = {
+                event_name : "player leave",
+                player_id : player_id
+            }
+            for(const [key, player] of this.players) 
+            {
+                this.server.send(JSON.stringify(data), 0, JSON.stringify(data).length, player.port, player.address);
+            }
         }
         //send sth back to confirm
     }
@@ -95,6 +103,13 @@ class Room {
     DeleteRoom()
     {
         //for(let i = 0; i < this.players.length; i++) this.players[i].socket.removeListener('data', this.Listener);
+        let data : any = {
+            event_name : 'disband',
+        }
+        for(const [key, player] of this.players) 
+        {
+            if(player.id != this.id) this.server.send(JSON.stringify(data), 0, JSON.stringify(data).length, player.port, player.address);
+        }
         this.players.clear();
         this.server.removeListener('message', this.Listener);
         RemoveRoom(this.id);
