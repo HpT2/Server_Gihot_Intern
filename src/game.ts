@@ -1,20 +1,21 @@
 import Player from "./player";
 import Room from "./room";
+import * as dgram from 'dgram';
 class Game {
 
-    players : Player[];
+    players : Map<string, Player>;
     room : Room;
     spawner : NodeJS.Timeout | null;
-    Listener : (msg : Buffer) => void;
+    Listener : (msg : Buffer, rInfo : dgram.RemoteInfo) => void;
 
     constructor(players : Map<string, Player>, room : Room)
     {
-        this.players = Array.from(players.values());
+        this.players = players;
         this.room = room;
         this.spawner = null;
 
-        this.Listener = (msg : Buffer) => {
-            this.GameListener(msg);
+        this.Listener = (msg : Buffer, rInfo : dgram.RemoteInfo) => {
+            this.GameListener(msg, rInfo);
         };
     }
 
@@ -28,20 +29,24 @@ class Game {
         this.SpawnEnemy();
     }
 
-    AddListener(player : Player) {
-       
+    AddListener() {
+       this.room.server.on('message', this.Listener);
     }
 
-    GameListener(data : Buffer) : void {
+    GameListener(data : Buffer, rInfo : dgram.RemoteInfo) : void {
+
+        //parse data
         const receivedData = data.toString('utf-8');
         let json : any = JSON.parse(receivedData);
+        if(!this.players.get(json.player_id)) return;
+
     }
 
     EmitToAllPlayer(event: string, data : any)
     {
-        for(let i = 0; i < this.players.length; i++)
+        for (const [key, player] of this.players)
         {
-            
+            //send data
         }
     }
 

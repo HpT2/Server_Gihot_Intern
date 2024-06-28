@@ -5,12 +5,14 @@ class Player{
     address : string;
     port : number;
     id : string;
-    constructor(id : string, address : string, port : number, name : string = "quoc")
+    gun_id : number;
+    constructor(id : string, address : string, port : number, gun_id : number = 1 ,name : string = "quoc")
     {   
         this.name = name;
         this.id = id;
         this.address = address;
         this.port = port;
+        this.gun_id = gun_id;
     }    
 }
 

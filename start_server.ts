@@ -24,12 +24,13 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
             case 'first connect':
                 //player first connect => provide a specific id and add to online players
                 let playerID : string = v4();
-                let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, "quoc" + Math.random().toPrecision(4).toString());
+                let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, 1,"quoc" + Math.random().toPrecision(4).toString());
                 onlinePlayers.set(playerID, thisPlayer);
                 let d = {
                     event_name : "provide id",
                     id : playerID,
-                    player_name : thisPlayer.name
+                    player_name : thisPlayer.name,
+                    gun_id : thisPlayer.gun_id
                 }
                 
                 server.send(JSON.stringify(d), 0, JSON.stringify(d).length, rInfo.port, rInfo.address);
