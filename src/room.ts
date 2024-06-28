@@ -54,9 +54,17 @@ class Room {
                 break;
             case 'ready':
                 this.readied_players.set(json.player_id, !this.readied_players.get(json.player_id));
+                console.log(this.readied_players.get(json.player_id));
                 for(const [key, value] of this.readied_players)
                 {
-                    if(value == false) return;
+                    if(value == false){
+                        let dt : any = {
+                            event_name : "not all player ready"
+                        }
+                        let host_player : Player | undefined = this.players.get(this.id);
+                        this.server.send(JSON.stringify(dt), 0, JSON.stringify(dt).length, host_player?.port, host_player?.address);
+                        return;
+                    }
                 }
 
                 let dt : any = {

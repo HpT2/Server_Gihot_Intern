@@ -45,7 +45,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 let player : Player | undefined = onlinePlayers.get(json.player_id);
                 if(player) {
                     Rooms.set(player.id, new Room(player, json._event.name, json._event.game_mode, server));
-                    Rooms.get(player.id)?.readied_players.set(player.id, false);
+                    Rooms.get(player.id)?.readied_players.set(player.id, true);
                 }
                 break;
             //get available room
