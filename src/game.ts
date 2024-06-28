@@ -1,12 +1,14 @@
 import Player from "./player";
 import Room from "./room";
 import * as dgram from 'dgram';
+
 class Game {
 
     players : Map<string, Player>;
     room : Room;
     spawner : NodeJS.Timeout | null;
     Listener : (msg : Buffer, rInfo : dgram.RemoteInfo) => void;
+    playerSpawnPos : any[] = [];
 
     constructor(players : Map<string, Player>, room : Room)
     {
@@ -17,6 +19,17 @@ class Game {
         this.Listener = (msg : Buffer, rInfo : dgram.RemoteInfo) => {
             this.GameListener(msg, rInfo);
         };
+
+        let i : number = 0;
+        for(const [key, player] of this.players)
+        {
+            this.playerSpawnPos.push({
+                player_id : player.id,
+                spawn_pos : [0 + i, 0, 0 + i]
+            });
+            i++;
+        }
+        this.EmitToAllPlayer("spawn player", this.playerSpawnPos);
     }
 
     Run() : void {
@@ -26,7 +39,6 @@ class Game {
         //         console.log(data);
         //     });
         // }
-        this.SpawnEnemy();
     }
 
     AddListener() {
@@ -44,9 +56,15 @@ class Game {
 
     EmitToAllPlayer(event: string, data : any)
     {
+        let d : any = {
+            event_name : event,
+            data : data
+        }
+        let json : string = JSON.stringify(d);
         for (const [key, player] of this.players)
         {
             //send data
+            this.room.server.send(json, 0, json.length, player.port, player.address);
         }
     }
 
@@ -68,8 +86,7 @@ class Game {
         //random spwan pos
 
         //send pos to all player
-        this.EmitToAllPlayer('spawn', {});
-        this.spawner = setTimeout(() => this.SpawnEnemy(), 200);
+        
     }
 }
 

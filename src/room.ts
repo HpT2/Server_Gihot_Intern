@@ -5,6 +5,7 @@ import RemoveRoom from "../start_server";
 
 class Room {
     players : Map<string, Player>;
+    readied_players : Map<string, boolean>;
     id : string;
     locked : boolean;
     game : Game | null;
@@ -17,6 +18,7 @@ class Room {
     {
         this.id = player.id;
         this.players = new Map<string, Player>();
+        this.readied_players = new Map<string, boolean>();
         this.locked = false;
         this.game = null;
         this.name = name;
@@ -47,8 +49,21 @@ class Room {
         switch(json._event.event_name)
         {
             case 'start':
+                this.game = new Game(this.players, this);
+                this.game.Run();
                 break;
             case 'ready':
+                this.readied_players.set(json.player_id, !this.readied_players.get(json.player_id));
+                for(const [key, value] of this.readied_players)
+                {
+                    if(value == false) return;
+                }
+
+                let dt : any = {
+                    event_name : "all player ready"
+                }
+                let host_player : Player | undefined = this.players.get(this.id);
+                this.server.send(JSON.stringify(dt), 0, JSON.stringify(dt).length, host_player?.port, host_player?.address);
                 break;
             case 'kick_player':
                 let kickedplayer:Player | undefined =this.players.get(json._event.player_id);
@@ -90,7 +105,8 @@ class Room {
             this.RemovePlayer(player_id);
             let data : any = {
                 event_name : "player leave",
-                player_id : player_id
+                player_id : player_id,
+                host_id : this.id
             }
             for(const [key, player] of this.players) 
             {

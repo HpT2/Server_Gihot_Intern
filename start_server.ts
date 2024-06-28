@@ -43,7 +43,10 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
             //create room
             case 'create_rooms':
                 let player : Player | undefined = onlinePlayers.get(json.player_id);
-                if(player) Rooms.set(player.id, new Room(player, json._event.name, json._event.game_mode, server));
+                if(player) {
+                    Rooms.set(player.id, new Room(player, json._event.name, json._event.game_mode, server));
+                    Rooms.get(player.id)?.readied_players.set(player.id, false);
+                }
                 break;
             //get available room
             case 'get_rooms':
@@ -55,7 +58,10 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 let room : Room | undefined  = Rooms.get(json._event.room_id);
                 let players : Map<string, Player>  = room ? room.players : new Map<string, Player>();
                 let join_player : Player | undefined = onlinePlayers.get(json.player_id);
-                if(join_player) room?.Add(join_player);
+                if(join_player) {
+                    room?.Add(join_player);
+                    room?.readied_players.set(join_player.id, false);
+                }
 
                 //send host info to join player
                 let data = {
