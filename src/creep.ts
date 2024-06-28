@@ -68,12 +68,11 @@ class Creep{
         let sendData = {
             event_name : "spawn creep",
             creepTypeInt: id,
-            spawnPos: {
-                x: GetRandom(-38,38),
+            spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
+                x: GetRandom(-38, 38),
                 y: 1.0,
-                z: GetRandom(-38,38)
-            },
-            spawnNum: this.creepsToSpawn[id].spawnRate,
+                z: GetRandom(-38, 38)
+            })),
             time: Date.now() - this.roomTimeCounts[roomId]
         }
         server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, port, address, () => {console.log(`Send to client ${address}:${port}: ${JSON.stringify(sendData)}`);})
