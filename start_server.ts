@@ -16,7 +16,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
         //parse data
         const receivedData = data.toString('utf-8');
         let json : any = JSON.parse(receivedData);
-
+        console.log(receivedData);
         //process event
         switch(json._event.event_name)
         {
@@ -87,7 +87,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
     });
 
 //start server
-const PORT = 9999;
+const PORT =  process.env.PORT || 9999;
 server.on('listening', () => {
     server.setSendBufferSize(64 * 1024);
     const address = server.address();
