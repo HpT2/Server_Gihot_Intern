@@ -15,7 +15,6 @@ const server = dgram.createSocket('udp4');
 server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
         //parse data
         const receivedData = data.toString('utf-8');
-        console.log(`Received from client (${rInfo.address}:${rInfo.port}): ${receivedData}`);
         let json : any = JSON.parse(receivedData);
 
         //process event

@@ -24,15 +24,16 @@ function GetRoomsInfo(Rooms : Room[] | undefined) : any
         if(Rooms[i].locked) continue;
         let info : {
             id : string,
-            name : string,
+            name : string, 
             game_mode : string
-        } =  {
+        } =  { 
             id : Rooms[i].id,
             name : Rooms[i].name,
             game_mode : Rooms[i].game_mode
         };
         infos.push(info);
     }
+    infos.reverse();
     return infos;
 }
 

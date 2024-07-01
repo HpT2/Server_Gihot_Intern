@@ -48,15 +48,8 @@ class Room {
 
         switch(json._event.event_name)
         {
-            case 'start':
-                this.game = new Game(this.players, this);
-                let d1 : any = {
-                    event_name : "start"
-                }
-                for(const [key, value] of this.players)
-                {
-                    this.server.send(JSON.stringify(d1), 0, JSON.stringify(d1).length, value.port, value.address);
-                }
+            case 'start': 
+                this.StartGame();
                 break;
             case 'ready':
                 this.readied_players.set(json.player_id, !this.readied_players.get(json.player_id));
@@ -149,7 +142,13 @@ class Room {
     {
         //init game state
         this.game = new Game(this.players, this);
-        //this.game.Run();
+        let d1 : any = {
+            event_name : "start"
+        }
+        for(const [key, value] of this.players)
+        {
+            this.server.send(JSON.stringify(d1), 0, JSON.stringify(d1).length, value.port, value.address);
+        }
         this.locked = true;
 
         //emit game started to all players

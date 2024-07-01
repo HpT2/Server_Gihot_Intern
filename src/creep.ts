@@ -93,7 +93,7 @@ class Creep{
         }
     }
 
-    public OnRoomCreate(room: Room) {
+    public OnGameStart(room: Room) {
         this.roomInfosForSpawnCreep.set(room.id, {
             timeStart: Date.now(),
             keepSpawns: true

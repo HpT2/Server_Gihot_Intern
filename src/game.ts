@@ -1,5 +1,6 @@
 import Player from "./player";
 import Room from "./room";
+import Creep from "./creep";
 import * as dgram from 'dgram';
 
 class Game {
@@ -12,20 +13,24 @@ class Game {
     client_side_loading : number = 0;
     constructor(players : Map<string, Player>, room : Room)
     {
-        this.players = players;
+        this.players = players; 
         this.room = room;
         this.spawner = null;
 
         this.Listener = (msg : Buffer, rInfo : dgram.RemoteInfo) => {
             this.GameListener(msg, rInfo);
         };
-
+ 
         let i : number = 0;
         for(const [key, player] of this.players)
         {
             this.playerSpawnPos.push({
                 player_id : player.id,
-                spawn_pos : [0 + i, 0, 0 + i]
+                spawn_pos : {
+                    x : 0 + i, 
+                    y: 1, 
+                    z :0 + i
+                }
             });
             i++;
         }
@@ -38,7 +43,7 @@ class Game {
         //     this.players[i].socket.on("data", (data : any) => {
         //         console.log(data);
         //     });
-        // }
+        // } 
     }
 
     AddListener() {
@@ -51,27 +56,36 @@ class Game {
         const receivedData = data.toString('utf-8');
         let json : any = JSON.parse(receivedData);
         if(!this.players.get(json.player_id)) return;
-
+        //console.log(`Received from client (${rInfo.address}:${rInfo.port}): ${receivedData}`);
         switch(json._event.event_name)
         {
             case 'done loading':
                 this.client_side_loading++;
-                if(this.client_side_loading == this.players.size) this.EmitToAllPlayer("spawn player", this.playerSpawnPos);
+                if(this.client_side_loading == this.players.size) 
+                {
+                    let d : any = {
+                        event_name : "spawn player",
+                        data : this.playerSpawnPos
+                    }
+                    this.EmitToAllPlayer(JSON.stringify(d));
+                }
+                Creep.getInstance().OnGameStart(this.room);
+                Creep.getInstance().StartSpawnProcess(this.room, this.room.server);
                 break;
-            case 'move':
-                console.log(json);
+            case 'move': 
+                let data : any = {
+                    event_name : "player move",
+                    player_id : json.player_id,
+                    velocity : json._event.velocity
+                }
+                this.EmitToAllPlayer(JSON.stringify(data));
                 break;
         }
 
     }
 
-    EmitToAllPlayer(event: string, data : any)
+    EmitToAllPlayer(json : string)
     {
-        let d : any = {
-            event_name : event,
-            data : data
-        }
-        let json : string = JSON.stringify(d);
         for (const [key, player] of this.players)
         {
             //send data
