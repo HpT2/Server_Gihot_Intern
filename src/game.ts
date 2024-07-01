@@ -79,7 +79,8 @@ class Game {
                 let data : any = {
                     event_name : "player move",
                     player_id : json.player_id,
-                    velocity : json._event.velocity
+                    velocity : json._event.velocity,
+                    position : json._event.position
                 }
                 this.EmitToAllPlayer(JSON.stringify(data));
                 break;
