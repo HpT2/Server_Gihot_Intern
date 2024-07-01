@@ -62,7 +62,7 @@ class Creep{
     }
 
     //Mock: Delete when use =))
-    public SpawnCreepByIdRepeatMock(id: number, roomId: number, server: dgram.Socket, port: number, address: string) {
+    private SpawnCreepByIdRepeatMock(id: number, roomId: number, server: dgram.Socket, port: number, address: string) {
         if (!this.roomKeepSpawns[roomId]) return;
 
         let sendData = {
@@ -108,7 +108,7 @@ class Creep{
         roomInfoForSpawnCreep.keepSpawns = false;
     } 
 
-    public SpawnCreepByIdRepeat(id: number, server: dgram.Socket, room: Room) {
+    private SpawnCreepByIdRepeat(id: number, server: dgram.Socket, room: Room) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room.id);
         
         if (roomInfoForSpawnCreep == undefined) return;
@@ -118,12 +118,11 @@ class Creep{
         let sendData = {
             event_name : "spawn creep",
             creepTypeInt: id,
-            spawnPos: {
-                x: GetRandom(-38,38),
+            spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
+                x: GetRandom(-38, 38),
                 y: 1.0,
-                z: GetRandom(-38,38)
-            },
-            spawnNum: this.creepsToSpawn[id].spawnRate,
+                z: GetRandom(-38, 38)
+            })),
             time: Date.now() - roomInfoForSpawnCreep.timeStart
         }
         
