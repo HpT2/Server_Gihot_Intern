@@ -87,10 +87,11 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
     });
 
 //start server
-const PORT = 9999;
+const PORT =  Number.parseInt(process.env.PORT ? process.env.PORT : "9999") || 9999;
 server.on('listening', () => {
     server.setSendBufferSize(64 * 1024);
     const address = server.address();
+    console.log(PORT);
     console.log(`Server listening on ${address.address}:${address.port} with send buffer size: ${server.getSendBufferSize()} Bytes`);
 });
 
