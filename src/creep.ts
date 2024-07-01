@@ -131,7 +131,7 @@ class Creep{
         });
     
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeat(id, server, room) }, randomDelay*1000);
+        setTimeout(() => { this.SpawnCreepByIdRepeat(id, server, room) }, randomDelay*5000);
     }
 
     public StartSpawnProcess(room: Room, server: dgram.Socket) {

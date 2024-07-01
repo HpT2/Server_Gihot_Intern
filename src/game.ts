@@ -30,7 +30,8 @@ class Game {
                     x : 0 + i, 
                     y: 1, 
                     z :0 + i
-                }
+                },
+                gun_id : player.gun_id
             });
             i++;
         }
@@ -69,8 +70,10 @@ class Game {
                     }
                     this.EmitToAllPlayer(JSON.stringify(d));
                 }
-                Creep.getInstance().OnGameStart(this.room);
-                Creep.getInstance().StartSpawnProcess(this.room, this.room.server);
+                setTimeout(() => {
+                    Creep.getInstance().OnGameStart(this.room);
+                    Creep.getInstance().StartSpawnProcess(this.room, this.room.server);
+                }, 3000);
                 break;
             case 'move': 
                 let data : any = {
