@@ -9,7 +9,7 @@ class Game {
     spawner : NodeJS.Timeout | null;
     Listener : (msg : Buffer, rInfo : dgram.RemoteInfo) => void;
     playerSpawnPos : any[] = [];
-
+    client_side_loading : number = 0;
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players;
@@ -29,7 +29,7 @@ class Game {
             });
             i++;
         }
-        this.EmitToAllPlayer("spawn player", this.playerSpawnPos);
+        this.AddListener();
     }
 
     Run() : void {
@@ -51,6 +51,17 @@ class Game {
         const receivedData = data.toString('utf-8');
         let json : any = JSON.parse(receivedData);
         if(!this.players.get(json.player_id)) return;
+
+        switch(json._event.event_name)
+        {
+            case 'done loading':
+                this.client_side_loading++;
+                if(this.client_side_loading == this.players.size) this.EmitToAllPlayer("spawn player", this.playerSpawnPos);
+                break;
+            case 'move':
+                console.log(json);
+                break;
+        }
 
     }
 

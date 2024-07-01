@@ -50,7 +50,13 @@ class Room {
         {
             case 'start':
                 this.game = new Game(this.players, this);
-                this.game.Run();
+                let d1 : any = {
+                    event_name : "start"
+                }
+                for(const [key, value] of this.players)
+                {
+                    this.server.send(JSON.stringify(d1), 0, JSON.stringify(d1).length, value.port, value.address);
+                }
                 break;
             case 'ready':
                 this.readied_players.set(json.player_id, !this.readied_players.get(json.player_id));
