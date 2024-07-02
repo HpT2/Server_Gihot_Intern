@@ -6,6 +6,7 @@ class Player{
     port : number;
     id : string;
     gun_id : number;
+    in_room : boolean = false;
     constructor(id : string, address : string, port : number, gun_id : number = 1 ,name : string = "quoc")
     {   
         this.name = name;

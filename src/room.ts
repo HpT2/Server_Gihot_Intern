@@ -74,12 +74,17 @@ class Room {
                 break;
             case 'kick_player':
                 let kickedplayer:Player | undefined =this.players.get(json._event.player_id);
+                
                 this.RemovePlayer(json._event.player_id);
                 
                 let data = {
                     event_name : 'kicked',
                 }
-                if(kickedplayer) this.server.send(JSON.stringify(data), 0, JSON.stringify(data).length, kickedplayer.port, kickedplayer.address);
+                if(kickedplayer) 
+                {
+                    kickedplayer.in_room = false;
+                    this.server.send(JSON.stringify(data), 0, JSON.stringify(data).length, kickedplayer.port, kickedplayer.address);
+                }
 
                 let data1={
                     event_name : 'kick',
@@ -93,6 +98,8 @@ class Room {
                 console.log(data1);
                 break;
             case 'leave':
+                let pl : Player | undefined =this.players.get(json._event.player_id);
+                if(pl) pl.in_room = false;
                 this.PlayerOutRoom(json.player_id);
                 break;
         }
@@ -131,6 +138,7 @@ class Room {
         }
         for(const [key, player] of this.players) 
         {
+            player.in_room = false;
             if(player.id != this.id) this.server.send(JSON.stringify(data), 0, JSON.stringify(data).length, player.port, player.address);
         }
         this.players.clear();

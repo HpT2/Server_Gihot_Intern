@@ -45,6 +45,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 if(player) {
                     Rooms.set(player.id, new Room(player, json._event.name, json._event.game_mode, server));
                     Rooms.get(player.id)?.readied_players.set(player.id, true);
+                    player.in_room = true;
                 }
                 break;
             //get available room
@@ -60,6 +61,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 if(join_player) {
                     room?.Add(join_player);
                     room?.readied_players.set(join_player.id, false);
+                    join_player.in_room = true;
                 }
 
                 //send host info to join player
@@ -81,6 +83,15 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                 
                 console.log(GetPlayersInfo(players));
                 
+                break;
+            case "start":
+                let pl : Player | undefined = onlinePlayers.get(json.player_id);
+                if(pl && !pl.in_room) {
+                    Rooms.set(pl.id, new Room(pl, json._event.name, json._event.game_mode, server));
+                    pl.in_room = true;
+                    Rooms.get(pl.id)?.readied_players.set(pl.id, true);
+                    Rooms.get(pl.id)?.StartGame();
+                }
                 break;
            
         };

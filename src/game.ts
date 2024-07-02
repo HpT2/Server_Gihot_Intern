@@ -64,16 +64,16 @@ class Game {
                 this.client_side_loading++;
                 if(this.client_side_loading == this.players.size) 
                 {
-                    let d : any = {
+                    let d : any = { 
                         event_name : "spawn player",
                         data : this.playerSpawnPos
                     }
                     this.EmitToAllPlayer(JSON.stringify(d));
+                    setTimeout(() => {
+                        Creep.getInstance().OnGameStart(this.room);
+                        Creep.getInstance().StartSpawnProcess(this.room, this.room.server);
+                    }, 3000); 
                 }
-                setTimeout(() => {
-                    Creep.getInstance().OnGameStart(this.room);
-                    Creep.getInstance().StartSpawnProcess(this.room, this.room.server);
-                }, 3000);
                 break;
             case 'move': 
                 let data : any = {
