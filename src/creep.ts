@@ -125,7 +125,7 @@ class Creep{
             })),
             time: Date.now() - roomInfoForSpawnCreep.timeStart
         }
-        
+         
         room.players.forEach((playerInfo, _) => {
             server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, playerInfo.port, playerInfo.address, () => {console.log(`Send to client ${playerInfo.address}:${playerInfo.port}: ${JSON.stringify(sendData)}`);})
         });

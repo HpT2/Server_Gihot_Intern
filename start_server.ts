@@ -15,15 +15,17 @@ const server = dgram.createSocket('udp4');
 server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
         //parse data
         const receivedData = data.toString('utf-8');
+        console.log(receivedData);
         let json : any = JSON.parse(receivedData);
-
+         
+ 
         //process event
         switch(json._event.event_name)
         {
             case 'first connect':
                 //player first connect => provide a specific id and add to online players
                 let playerID : string = v4();
-                let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, 1,"quoc" + Math.random().toPrecision(4).toString());
+                let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, 1,json._event.name);
                 onlinePlayers.set(playerID, thisPlayer);
                 let d = {
                     event_name : "provide id",
