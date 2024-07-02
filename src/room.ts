@@ -102,6 +102,10 @@ class Room {
                 if(pl) pl.in_room = false;
                 this.PlayerOutRoom(json.player_id);
                 break;
+            case 'choosegun':
+                let _pl : Player | undefined =this.players.get(json.player_id);
+                if(_pl) _pl.gun_id = json._event.gun_id;
+                break;
         }
     }
 
