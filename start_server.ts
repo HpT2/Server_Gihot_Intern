@@ -95,6 +95,10 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                     Rooms.get(pl.id)?.StartGame();
                 }
                 break;
+            case "choose gun":
+                let _pl : Player | undefined = onlinePlayers.get(json.player_id);
+                if(_pl) _pl.gun_id = json._event.gun_id;
+                break;
            
         };
     });
