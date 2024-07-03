@@ -11,7 +11,7 @@ var Rooms : Map<string, Room> = new Map<string, Room>();
 
 const server = dgram.createSocket('udp4');
 
-//Handle request from clients
+//Handle request from clients 
 server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
         //parse data
         const receivedData = data.toString('utf-8');
@@ -83,7 +83,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                     if(key != json.player_id) server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, player.port, player.address);
                 }
                 
-                console.log(GetPlayersInfo(players));
+                //console.log(GetPlayersInfo(players));
                 
                 break;
             case "start":
@@ -95,11 +95,6 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                     Rooms.get(pl.id)?.StartGame();
                 }
                 break;
-            case "choose gun":
-                let _pl : Player | undefined = onlinePlayers.get(json.player_id);
-                if(_pl) _pl.gun_id = json._event.gun_id;
-                break;
-           
         };
     });
 

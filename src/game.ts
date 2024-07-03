@@ -85,6 +85,9 @@ class Game {
                 }
                 this.EmitToAllPlayer(JSON.stringify(data));
                 break;
+            case "game end":
+                this.Done();
+                break;
         }
 
     }
@@ -111,13 +114,6 @@ class Game {
         this.room.Done();
     }
 
-    SpawnEnemy() : void
-    {
-        //random spwan pos
-
-        //send pos to all player
-        
-    }
 }
 
 export default Game;
