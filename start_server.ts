@@ -11,19 +11,21 @@ var Rooms : Map<string, Room> = new Map<string, Room>();
 
 const server = dgram.createSocket('udp4');
 
-//Handle request from clients
+//Handle request from clients 
 server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
         //parse data
         const receivedData = data.toString('utf-8');
+        console.log(receivedData);
         let json : any = JSON.parse(receivedData);
-
+         
+ 
         //process event
         switch(json._event.event_name)
         {
             case 'first connect':
                 //player first connect => provide a specific id and add to online players
                 let playerID : string = v4();
-                let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, 1,"quoc" + Math.random().toPrecision(4).toString());
+                let thisPlayer : Player = new Player(playerID, rInfo.address, rInfo.port, 1,json._event.name);
                 onlinePlayers.set(playerID, thisPlayer);
                 let d = {
                     event_name : "provide id",
@@ -81,7 +83,7 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                     if(key != json.player_id) server.send(JSON.stringify(data1), 0, JSON.stringify(data1).length, player.port, player.address);
                 }
                 
-                console.log(GetPlayersInfo(players));
+                //console.log(GetPlayersInfo(players));
                 
                 break;
             case "start":
@@ -93,7 +95,6 @@ server.on('message', (data: Buffer, rInfo : dgram.RemoteInfo) => {
                     Rooms.get(pl.id)?.StartGame();
                 }
                 break;
-           
         };
     });
 

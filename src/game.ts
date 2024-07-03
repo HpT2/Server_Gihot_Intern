@@ -80,9 +80,13 @@ class Game {
                     event_name : "player move",
                     player_id : json.player_id,
                     velocity : json._event.velocity,
-                    position : json._event.position
+                    position : json._event.position,
+                    rotation: json._event.rotation
                 }
                 this.EmitToAllPlayer(JSON.stringify(data));
+                break;
+            case "game end":
+                this.Done();
                 break;
         }
 
@@ -110,13 +114,6 @@ class Game {
         this.room.Done();
     }
 
-    SpawnEnemy() : void
-    {
-        //random spwan pos
-
-        //send pos to all player
-        
-    }
 }
 
 export default Game;
