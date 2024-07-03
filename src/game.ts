@@ -80,7 +80,8 @@ class Game {
                     event_name : "player move",
                     player_id : json.player_id,
                     velocity : json._event.velocity,
-                    position : json._event.position
+                    position : json._event.position,
+                    rotation: json._event.rotation
                 }
                 this.EmitToAllPlayer(JSON.stringify(data));
                 break;
