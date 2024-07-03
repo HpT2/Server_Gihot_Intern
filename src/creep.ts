@@ -70,7 +70,7 @@ class Creep{
             creepTypeInt: id,
             spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
                 x: GetRandom(-38, 38),
-                y: 1.0,
+                y: 0,
                 z: GetRandom(-38, 38)
             })),
             time: Date.now() - this.roomTimeCounts[roomId]
@@ -120,7 +120,7 @@ class Creep{
             creepTypeInt: id,
             spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
                 x: GetRandom(-38, 38),
-                y: 1.0,
+                y: 0,
                 z: GetRandom(-38, 38)
             })),
             time: Date.now() - roomInfoForSpawnCreep.timeStart
