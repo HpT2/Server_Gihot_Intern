@@ -4,7 +4,7 @@
   "description": "",
   "main": "start_server.ts",
   "scripts": {
-    "test": "npx ts-node start_server.ts",
+    "test": "npx ts-node start_server2.ts",
     "start": "ts-node-dev --respawn --quiet start_server.ts"
   },
   "author": "",

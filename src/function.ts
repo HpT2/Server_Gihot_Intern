@@ -15,7 +15,7 @@ export function SendRoomsInfoToClient(server : dgram.Socket, Rooms : Map<string,
     server.send(msg, 0, msg.length, port, address);
 }
 
-function GetRoomsInfo(Rooms : Room[] | undefined) : any
+export function GetRoomsInfo(Rooms : Room[] | undefined) : any
 {
     if(!Rooms) return ;
     let infos : any[] = [];

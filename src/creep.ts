@@ -62,7 +62,7 @@ class Creep{
     }
 
     //Mock: Delete when use =))
-    private SpawnCreepByIdRepeatMock(id: number, roomId: number, server: dgram.Socket, port: number, address: string) {
+    private SpawnCreepByIdRepeatMock(id: number, roomId: number, worker : any, socketId : string) {
         if (!this.roomKeepSpawns[roomId]) return;
 
         let sendData = {
@@ -75,23 +75,24 @@ class Creep{
             })),
             time: Date.now() - this.roomTimeCounts[roomId]
         }
-        server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, port, address, () => {console.log(`Send to client ${address}:${port}: ${JSON.stringify(sendData)}`);})
+        worker.postMessage({socketId : socketId, data : sendData});
+
 
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeatMock(id, roomId, server, port, address) }, randomDelay*1000);
+        setTimeout(() => { this.SpawnCreepByIdRepeatMock(id, roomId, worker, socketId) }, randomDelay*1000);
     }
 
     //Mock: Delete when use =))
-    public StartSpawnProcessMock(roomId: number, server: dgram.Socket, port: number, address: string) {
-        this.roomKeepSpawns[roomId] = true;
-        this.roomTimeCounts[roomId] = Date.now();
-        for (let i = 0; i < this.creepsToSpawn.length; i++) {
-            const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
-            setTimeout(() => {
-                this.SpawnCreepByIdRepeatMock(i, roomId, server, port, address)
-            }, initialDelay);
-        }
-    }
+    // public StartSpawnProcessMock(roomId: number, server: dgram.Socket, port: number, address: string) {
+    //     this.roomKeepSpawns[roomId] = true;
+    //     this.roomTimeCounts[roomId] = Date.now();
+    //     for (let i = 0; i < this.creepsToSpawn.length; i++) {
+    //         const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
+    //         setTimeout(() => {
+    //             this.SpawnCreepByIdRepeatMock(i, roomId, server, worker, )
+    //         }, initialDelay);
+    //     }
+    // }
 
     public OnGameStart(room: Room) {
         this.roomInfosForSpawnCreep.set(room.id, {
@@ -108,7 +109,7 @@ class Creep{
         roomInfoForSpawnCreep.keepSpawns = false;
     } 
 
-    private SpawnCreepByIdRepeat(id: number, server: dgram.Socket, room: Room) {
+    private SpawnCreepByIdRepeat(id: number, worker : any, room: Room) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room.id);
         
         if (roomInfoForSpawnCreep == undefined) return;
@@ -127,14 +128,15 @@ class Creep{
         }
          
         room.players.forEach((playerInfo, _) => {
-            server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, playerInfo.port, playerInfo.address, () => {console.log(`Send to client ${playerInfo.address}:${playerInfo.port}: ${JSON.stringify(sendData)}`);})
+            worker.postMessage({socketId : playerInfo.sessionId, data : sendData});
+            //server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, playerInfo.port, playerInfo.address, () => {console.log(`Send to client ${playerInfo.address}:${playerInfo.port}: ${JSON.stringify(sendData)}`);})
         });
     
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeat(id, server, room) }, randomDelay*5000);
+        setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*5000);
     }
 
-    public StartSpawnProcess(room: Room, server: dgram.Socket) {
+    public StartSpawnProcess(room: Room, worker : any) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room.id);
         
         if (roomInfoForSpawnCreep == undefined) return;
@@ -145,7 +147,7 @@ class Creep{
         for (let i = 0; i < this.creepsToSpawn.length; i++) {
             const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
             setTimeout(() => {
-                this.SpawnCreepByIdRepeat(i, server, room)
+                this.SpawnCreepByIdRepeat(i, worker, room)
             }, initialDelay);
         }
     }

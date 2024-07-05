@@ -2,19 +2,18 @@
 class Player{
 
     name : string;
-    address : string;
-    port : number;
+    sessionId : string;
     id : string;
-    gun_id : number;
+    gun_id : number = 0;
     in_room : boolean = false;
-    constructor(id : string, address : string, port : number, gun_id : number = 1 ,name : string = "quoc")
+    constructor(id : string, sessionId : string, gun_id : number = 1 ,name : string = "quoc")
     {   
         this.name = name;
         this.id = id;
-        this.address = address;
-        this.port = port;
+        this.sessionId = sessionId; 
         this.gun_id = gun_id;
     }    
-}
+
+}  
 
 export default Player;
