@@ -26,7 +26,7 @@ class Game {
                 player_id : player.id,
                 spawn_pos : {
                     x : 0 + i, 
-                    y: 1, 
+                    y: -2, 
                     z :0 + i
                 },
                 gun_id : player.gun_id
@@ -57,7 +57,7 @@ class Game {
         //         player.position.z += player.velocity.z * this.tick_rate;
         //     }
         // });
-        //console.log(this.tick_rate);
+        //console.log(this.current_tick);
     }
 
     FixedUpdate(worker : any)
@@ -65,12 +65,12 @@ class Game {
         //process
         this.Tick(); 
         
-        if(this.current_tick % 2) this.EmitPlayersState(worker);
+        if(this.current_tick % 3) this.EmitPlayersState(worker);
 
         this.current_tick++;
     }
 
-    GetPlayersState() : any 
+    GetPlayersState() : any  
     {
         let states : any = [];  
         this.players.forEach((player, _) => {
@@ -82,10 +82,10 @@ class Game {
                 position : player.position
             }
             states.push(data);
-        })
+        }) 
         return states;
     }
-
+ 
     EmitPlayersState(worker : any)
     {
         let data = {
