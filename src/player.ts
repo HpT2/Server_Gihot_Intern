@@ -10,6 +10,8 @@ class Player{
     velocity : any = {x : 0, y : 0, z : 0};
     rotation : any = {x : 0, y : 0, z : 0, w : 0};
     isColliding : boolean = false;
+    isFire : boolean = true;
+    last_tick : number = 0;
     constructor(id : string, sessionId : string, gun_id : number = 1 ,name : string = "quoc")
     {   
         this.name = name;

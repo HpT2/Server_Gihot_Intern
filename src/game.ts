@@ -47,6 +47,12 @@ class Game {
         //this.FixedUpdate(worker);
         
         setInterval(() => this.FixedUpdate(worker), this.tick_rate * 1000);
+
+        setTimeout(() => {
+            Creep.getInstance().OnGameStart(this.room);
+            Creep.getInstance().StartSpawnProcess(this.room, worker);
+        }, 1000); 
+
     }
 
     Tick()
@@ -54,9 +60,9 @@ class Game {
         // this.players.forEach((player, _) => {
         //     if(!player.isColliding){
         //         player.position.x += player.velocity.x * this.tick_rate;
-        //         player.position.z += player.velocity.z * this.tick_rate;
+        //         player.position.z += player.velocity.z * this.ti ck_rate;
         //     }
-        // });
+        // }); 
         //console.log(this.current_tick);
     }
 
@@ -79,8 +85,10 @@ class Game {
                 gun : player.gun_id,
                 velocity : player.velocity,
                 rotation : player.rotation,
-                position : player.position
+                position : player.position,
+                isFire : player.isFire
             }
+            if(player.isFire) player.isFire = false;
             states.push(data);
         }) 
         return states;
@@ -117,11 +125,6 @@ class Game {
                     this.EmitToAllPlayer(worker, dataDoneLoad);
 
                     this.Run(worker); 
-
-                    // setTimeout(() => {
-                    //     Creep.getInstance().OnGameStart(this.room);
-                    //     Creep.getInstance().StartSpawnProcess(this.room, worker);
-                    // }, 1000); 
                 }
                 break;
             case 'player state': 
@@ -131,6 +134,8 @@ class Game {
                     playerState.rotation = json._event.rotation;
                     playerState.position = json._event.position; 
                     playerState.isColliding = json._event.isColliding;
+                    playerState.isFire = json._event.isFire;
+                    playerState.last_tick = this.current_tick;
                 }
 
                 // let data = {
@@ -161,6 +166,14 @@ class Game {
 
                 this.EmitToAllPlayer(worker, dataPosition);
 
+                break;
+            case "player out":
+                let dataOut : any = {
+                    event_name : "player out",
+                    player_id : json.player_id
+                }
+
+                this.EmitToAllPlayer(worker, dataOut);
                 break;
             case "game end":
                 this.Done();
