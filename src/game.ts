@@ -55,7 +55,6 @@ class Game {
             Creep.getInstance().OnGameStart(this.room);
             Creep.getInstance().StartSpawnProcess(this.room, worker);
         }, 1000); 
-
     }
 
     Tick()
@@ -183,6 +182,16 @@ class Game {
                 this.room.RemovePlayer(json.player_id);
                 if(this.players.size == 0) this.Done(1);
                 break;
+            case "creep destroy":
+                let creepDestroyInfo = {
+                    event_name : "destroy creep",
+                    creep_id : json._event.creep_id, 
+                }
+
+                this.EmitToAllPlayer(worker, creepDestroyInfo);
+
+                break;
+
             case "game end":
                 this.Done();
                 break;
