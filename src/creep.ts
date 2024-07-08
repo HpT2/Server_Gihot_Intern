@@ -1,5 +1,4 @@
 import { GetRandom } from "./function";
-import * as dgram from 'dgram';
 import Room from "./room";
 
 class CreepSpawnInfo {

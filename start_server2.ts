@@ -20,10 +20,10 @@ if (isMainThread) {
  
     })
 
-    function waitForBuffer() {
+    function waitForBuffer(size : number) {
         return new Promise(function(resolve, reject) {
             const checkBuffer = () => {
-                if (bufferStream.length != 0) resolve(0);
+                if (bufferStream.length >= size) resolve(0);
                 setTimeout(checkBuffer, 0);
             }
             checkBuffer();
@@ -32,16 +32,16 @@ if (isMainThread) {
 
     async function processBuffer()
     {
-        await waitForBuffer();
+        await waitForBuffer(4);
 
         let length : number = parseInt(bufferStream.subarray(0, maxDataLength).toString("hex"), 16);
+        await waitForBuffer(4 + length);
         let data : string = bufferStream.subarray(maxDataLength, maxDataLength + length).toString('utf-8');
-
-        bufferStream = bufferStream.subarray(maxDataLength + length, bufferStream.length);
-        console.log(length, data); 
+        bufferStream = bufferStream.subarray(maxDataLength + length, bufferStream.length); 
         let json : any = JSON.parse(data);
+        //console.log(json);
             //process event
-            switch(json._event.event_name)
+        switch(json._event.event_name) 
             {
                 case 'first connect':
                     //player first connect => provide a specific id and add to online players
@@ -49,7 +49,7 @@ if (isMainThread) {
                     let thisPlayer : Player = new Player(playerID, json.sessionId, 1,json._event.name);
                     onlinePlayers.set(playerID, thisPlayer);
                     let d = {
-                        event_name : "provide id",
+                        event_name : "provide id", 
                         id : playerID,
                         player_name : thisPlayer.name,
                         gun_id : thisPlayer.gun_id
@@ -152,6 +152,8 @@ if (isMainThread) {
             if(data !== null) parentPort.postMessage(data);
         });
 
+        socket.on('error', () => {});
+
         let socketId : string = v4();
 
         sessions.set(socketId, socket);
@@ -159,7 +161,7 @@ if (isMainThread) {
             event_name : "provide session id",
             id : socketId
         }
-        socket.write(JSON.stringify(sessionInfo), () => console.log("provided session id"));
+        socket.write(AddLengthField(JSON.stringify(sessionInfo)), () => console.log("provided session id"));
 
     });
 
@@ -167,7 +169,15 @@ if (isMainThread) {
         console.log("server On");
     })
 
+    function AddLengthField(data : string)
+    {
+        let sendBuffer : Buffer = Buffer.alloc(4 + data.length); //4B for length field
+        sendBuffer.writeInt32LE(data.length, 0);
+        sendBuffer.write(data , 4);
+        return sendBuffer;
+    }
+
     parentPort.on('message', (json : any) => {
-        sessions.get(json.socketId)?.write(JSON.stringify(json.data));
+        sessions.get(json.socketId)?.write(AddLengthField(JSON.stringify(json.data)));
     })
 }
