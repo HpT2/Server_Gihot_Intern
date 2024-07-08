@@ -132,7 +132,7 @@ class Creep{
         });
     
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*5000);
+        setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*1000);
     }
 
     public StartSpawnProcess(room: Room, worker : any) {
@@ -141,7 +141,7 @@ class Creep{
         if (roomInfoForSpawnCreep == undefined) return;
 
         roomInfoForSpawnCreep.keepSpawns = true;
-        roomInfoForSpawnCreep.timeStart = Date.now();
+        roomInfoForSpawnCreep.timeStart = Date.now(); 
 
         for (let i = 0; i < this.creepsToSpawn.length; i++) {
             const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);

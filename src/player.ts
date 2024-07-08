@@ -12,6 +12,7 @@ class Player{
     isColliding : boolean = false;
     isFire : boolean = true;
     last_tick : number = 0;
+    isActive : boolean = true;
     constructor(id : string, sessionId : string, gun_id : number = 1 ,name : string = "quoc")
     {   
         this.name = name;

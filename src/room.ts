@@ -1,5 +1,6 @@
 import Player from "./player";
 import Game from "./game";
+import { RemoveRoom } from "../start_server2";
 
 class Room {
     players : Map<string, Player>;
@@ -110,7 +111,7 @@ class Room {
     PlayerOutRoom(worker : any, player_id : string, rooms : Map<string, Room>)
     {
         if(player_id == this.id) {
-            this.DeleteRoom(worker, rooms);
+            this.DeleteRoom(worker);
         }
         else {
             this.RemovePlayer(player_id);
@@ -122,12 +123,12 @@ class Room {
             for(const [key, player] of this.players) 
             {
                 worker.postMessage({socketId : player.sessionId, data : dataLeave});
-            }
-        }
+            } 
+        } 
         //send sth back to confirm
     }
-
-    DeleteRoom(worker : any, rooms : Map<string, Room>)
+ 
+    DeleteRoom(worker : any)
     {
         //for(let i = 0; i < this.players.length; i++) this.players[i].socket.removeListener('data', this.Listener);
         let dataDisband : any = {
@@ -142,7 +143,7 @@ class Room {
             }
         }
         this.players.clear();
-        rooms.delete(this.id);
+        RemoveRoom(this.id);
     }
 
     StartGame(worker : any)
@@ -160,10 +161,18 @@ class Room {
         this.locked = true;
     }
 
-    Done() : void
+    Done(state : number) : void
     {
-        this.game = null;
-        this.locked = false;
+        if(state == 0)
+        {
+            this.game = null;
+            this.locked = false;
+        }
+        else 
+        {
+            this.game = null;
+            RemoveRoom(this.id);
+        }
     }
 }
 

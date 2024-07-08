@@ -8,10 +8,17 @@ const { Worker, isMainThread, parentPort } = require('worker_threads');
 import { GetPlayersInfo, GetRoomsInfo } from "./src/function";
 
 const maxDataLength : number = 4;
-if (isMainThread) {
-    let onlinePlayers : Map<string, Player> = new Map<string, Player>();
-    let rooms : Map<string, Room> = new Map<string, Room>();
 
+let onlinePlayers : Map<string, Player> = new Map<string, Player>();
+let rooms : Map<string, Room> = new Map<string, Room>();
+
+export function RemoveRoom(id : string)
+{
+    rooms.delete(id);
+}
+
+if (isMainThread) {
+    
     const worker = new Worker(__filename);
 
     let bufferStream : Buffer = Buffer.from('');

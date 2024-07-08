@@ -13,6 +13,8 @@ class Game {
     client_side_loading : number = 0;
     tick_rate = 1 / 50;
     current_tick = 0;
+    fixedUpdate : any;
+
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players; 
@@ -33,6 +35,7 @@ class Game {
             });
             i++;
         }  
+        this.fixedUpdate = null;
     }
 
     Run(worker : any) : void {
@@ -46,7 +49,7 @@ class Game {
         //setInterval(() => this.EmitPlayersState(worker), 1000 / 10); 
         //this.FixedUpdate(worker);
         
-        setInterval(() => this.FixedUpdate(worker), this.tick_rate * 1000);
+        this.fixedUpdate = setInterval(() => this.FixedUpdate(worker), this.tick_rate * 1000);
 
         setTimeout(() => {
             Creep.getInstance().OnGameStart(this.room);
@@ -57,13 +60,15 @@ class Game {
 
     Tick()
     {
-        // this.players.forEach((player, _) => {
-        //     if(!player.isColliding){
-        //         player.position.x += player.velocity.x * this.tick_rate;
-        //         player.position.z += player.velocity.z * this.ti ck_rate;
-        //     }
-        // }); 
+        this.players.forEach((player, _) => {
+            if(this.current_tick - player.last_tick > 10)
+            {
+                player.velocity = {x : 0, y : 0, z : 0};
+                player.isFire = false;
+            }
+        }); 
         //console.log(this.current_tick);
+        
     }
 
     FixedUpdate(worker : any)
@@ -71,7 +76,8 @@ class Game {
         //process
         this.Tick(); 
         
-        if(this.current_tick % 3) this.EmitPlayersState(worker);
+        if(this.current_tick % 3 == 0)  this.EmitPlayersState(worker);
+        
 
         this.current_tick++;
     }
@@ -129,7 +135,7 @@ class Game {
                 break;
             case 'player state': 
                 let playerState = this.players.get(json.player_id);
-                if(playerState){
+                if(playerState && playerState.isActive){
                     playerState.velocity = json._event.velocity;
                     playerState.rotation = json._event.rotation;
                     playerState.position = json._event.position; 
@@ -172,13 +178,15 @@ class Game {
                     event_name : "player out",
                     player_id : json.player_id
                 }
-
+                
                 this.EmitToAllPlayer(worker, dataOut);
+                this.room.RemovePlayer(json.player_id);
+                if(this.players.size == 0) this.Done(1);
                 break;
             case "game end":
                 this.Done();
                 break;
-        }
+        }  
     }
 
     EmitToAllPlayer(worker: any, json : any)  
@@ -192,9 +200,12 @@ class Game {
         }
     }
 
-    Done() : void 
+    Done(state : number = 0) : void 
     {
-        this.room.Done();
+        //console.log("done");
+        clearInterval(this.fixedUpdate);
+        Creep.getInstance().OnRoomDestroy(this.room);
+        this.room.Done(state);
     }
 
 }
