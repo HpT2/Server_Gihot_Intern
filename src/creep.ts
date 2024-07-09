@@ -116,8 +116,8 @@ class Creep{
         if (!roomInfoForSpawnCreep.keepSpawns) return;
 
         let sendData = {
-            event_name : "spawn creep",
-            creepTypeInt: id,
+            event_name : "spawn creep", 
+            creepTypeInt: id, 
             spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
                 x: GetRandom(-38, 38),
                 y: 0,

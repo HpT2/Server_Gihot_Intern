@@ -23,18 +23,14 @@ class Game {
         let i : number = 0;
         for(const [key, player] of this.players)
         {
-            player.position = {x : 0 + i, y : 1, z : 0 + i};
+            player.position = {x : 0 + i * 5, y : 0, z : 0 + i * 5};
             this.playerSpawnPos.push({
                 player_id : player.id,
-                spawn_pos : {
-                    x : 0 + i, 
-                    y: -2, 
-                    z :0 + i
-                },
+                spawn_pos : player.position,
                 gun_id : player.gun_id
             });
-            i++;
-        }  
+            i++; 
+        }   
         this.fixedUpdate = null;
     }
 
