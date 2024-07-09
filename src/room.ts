@@ -109,7 +109,7 @@ class Room {
     PlayerQuit(id : string, worker : any, rooms : Map<string, Room>)
     {
         if(this.players.size == 1) {
-            if(this.game) this.game.Done(1);
+            if(this.game) this.game.Done(1, worker);
             else this.Done(1);
         }
         else{
@@ -188,6 +188,10 @@ class Room {
         {
             this.game = null;
             this.locked = false;
+            this.readied_players.forEach((player, key) => {
+                if(key == this.id) return;
+                player = false;
+            })
         }
         else 
         {

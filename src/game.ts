@@ -57,13 +57,20 @@ class Game {
 
     Tick(worker : any)
     {
+        let numDead : number = 0;
         this.players.forEach((player, _) => {
             if(this.current_tick - player.last_tick > 10)
             {
                 player.velocity = {x : 0, y : 0, z : 0};
                 player.isFire = false;
             }
+            if(player.isDead) numDead++;
         }); 
+
+        if(numDead == this.players.size)
+        {
+            this.Done(0, worker);
+        }
 
         if(this.resumeFromPause)
         {
@@ -161,7 +168,7 @@ class Game {
                 }
 
                 this.EmitToAllPlayer(worker, firstResume);
-                
+
                 break;
             case 'player state': 
                 let playerState = this.players.get(json.player_id);
@@ -187,7 +194,7 @@ class Game {
 
             case "player out":
                 this.PlayerOut(json.player_id, worker);
-                if(this.players.size == 0) this.Done(1);
+                if(this.players.size == 0) this.Done(1, worker);
                 break;
 
             case "creep destroy":
@@ -218,7 +225,7 @@ class Game {
                 break;
             
             case "game end":
-                this.Done();
+                this.Done(0, worker);
                 break;
         }  
     }
@@ -245,11 +252,17 @@ class Game {
         }
     }
 
-    Done(state : number = 0) : void 
+    Done(state : number = 0, worker : any) : void 
     {
         //console.log("done");
         clearInterval(this.fixedUpdate);
         Creep.getInstance().OnRoomDestroy(this.room);
+        let dataDone = {
+            event_name : "game end"
+        }
+        
+        if(state == 0) this.EmitToAllPlayer(worker, dataDone);
+
         this.room.Done(state);
     }
 
