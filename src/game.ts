@@ -24,7 +24,8 @@ class Game {
         let i : number = 0;
         for(const [key, player] of this.players)
         {
-            player.position = {x : 0 + i * 5, y : 0, z : 0 + i * 5};
+            player.position = {x : 0 + i * 5, y : 0.7, z : 0 + i * 5};
+            player.Setup();
             this.playerSpawnPos.push({
                 player_id : player.id,
                 spawn_pos : player.position,
@@ -113,7 +114,8 @@ class Game {
                 velocity : player.velocity,
                 rotation : player.rotation,
                 position : player.position,
-                isFire : player.isFire
+                isFire : player.isFire,
+                isDead : player.isDead
             }
             if(player.isFire) player.isFire = false;
             states.push(data);
@@ -156,13 +158,10 @@ class Game {
                 break;
             case 'player state': 
                 let playerState = this.players.get(json.player_id);
-                if(playerState && playerState.isActive){
-                    playerState.velocity = json._event.velocity;
-                    playerState.rotation = json._event.rotation;
-                    playerState.position = json._event.position; 
-                    playerState.isColliding = json._event.isColliding;
-                    playerState.isFire = json._event.isFire;
+                if(playerState){
+                    playerState.SetState(json);          
                     playerState.last_tick = this.current_tick;
+                    
                 }
 
                 // let data = {
@@ -181,9 +180,9 @@ class Game {
 
             case "player out":
                 this.PlayerOut(json.player_id, worker);
-                this.room.RemovePlayer(json.player_id);
                 if(this.players.size == 0) this.Done(1);
                 break;
+
             case "creep destroy":
                 let creepDestroyInfo = {
                     event_name : "destroy creep",
@@ -191,7 +190,6 @@ class Game {
                 }
 
                 this.EmitToAllPlayer(worker, creepDestroyInfo);
-
                 break;
             case 'pause':
                 // if(json.player_id != this.room.id) break;
@@ -201,10 +199,17 @@ class Game {
 
                 this.EmitToAllPlayer(worker, dataPause);
                 break;
+
             case 'resume':
                 this.resumeFromPause = true;
                 this.resumeTime = 3;
                 break;
+            
+            case 'revive':
+                let revivePlayer = this.players.get(json._event.player_id);
+                if(revivePlayer) revivePlayer.isDead = false;
+                break;
+            
             case "game end":
                 this.Done();
                 break;
@@ -219,6 +224,7 @@ class Game {
         }
         
         this.EmitToAllPlayer(worker, dataOut);
+        this.room.RemovePlayer(id);
     }
 
     EmitToAllPlayer(worker: any, json : any)  

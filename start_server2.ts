@@ -148,7 +148,7 @@ if (isMainThread) {
     }
 
     processBuffer();
-    setInterval(() => console.log(rooms.size), 1000);
+    //setInterval(() => console.log(rooms.size), 1000);
 
 } else {
 

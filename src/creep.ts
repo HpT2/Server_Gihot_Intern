@@ -115,21 +115,24 @@ class Creep{
 
         if (!roomInfoForSpawnCreep.keepSpawns) return;
 
-        let sendData = {
-            event_name : "spawn creep", 
-            creepTypeInt: id, 
-            spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
-                x: GetRandom(-38, 38),
-                y: 0,
-                z: GetRandom(-38, 38)
-            })),
-            time: Date.now() - roomInfoForSpawnCreep.timeStart
+        if(!room.pause)
+        {
+            let sendData = {
+                event_name : "spawn creep", 
+                creepTypeInt: id, 
+                spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
+                    x: GetRandom(-38, 38),
+                    y: 0,
+                    z: GetRandom(-38, 38)
+                })),
+                time: Date.now() - roomInfoForSpawnCreep.timeStart
+            }
+             
+            room.players.forEach((playerInfo, _) => {
+                worker.postMessage({socketId : playerInfo.sessionId, data : sendData});
+                //server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, playerInfo.port, playerInfo.address, () => {console.log(`Send to client ${playerInfo.address}:${playerInfo.port}: ${JSON.stringify(sendData)}`);})
+            });
         }
-         
-        room.players.forEach((playerInfo, _) => {
-            worker.postMessage({socketId : playerInfo.sessionId, data : sendData});
-            //server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, playerInfo.port, playerInfo.address, () => {console.log(`Send to client ${playerInfo.address}:${playerInfo.port}: ${JSON.stringify(sendData)}`);})
-        });
     
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
         setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*1000);

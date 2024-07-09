@@ -10,7 +10,7 @@ class Room {
     game : Game | null;
     name : string;
     game_mode : string;
-
+    pause : boolean = false;
     constructor(player : Player, name :string, game_mode : string)
     {
         this.id = player.id;
