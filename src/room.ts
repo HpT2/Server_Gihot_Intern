@@ -91,11 +91,14 @@ class Room {
             case 'leave':
                 let pl : Player | undefined = this.players.get(json._event.player_id);
                 if(pl) pl.in_room = false;
-                this.PlayerOutRoom(worker, json.player_id, rooms);
+                this.PlayerOutRoom(worker, json.player_id);
                 break;
             case 'choosegun':
                 let _pl : Player | undefined =this.players.get(json.player_id);
                 if(_pl) _pl.gun_id = json._event.gun_id;
+                break;
+            case 'quit':
+                this.PlayerQuit(json.player_id, worker, rooms);
                 break;
             default:
                 this.game?.GameListener(worker, json);
@@ -103,12 +106,29 @@ class Room {
         }
     }
 
+    PlayerQuit(id : string, worker : any, rooms : Map<string, Room>)
+    {
+        if(this.players.size == 1) {
+            if(this.game) this.game.Done(1);
+            else this.Done(1);
+        }
+        else{
+            
+            if(this.game) {
+                if(id == this.id) this.id = Array.from(this.players)[1][1].id;
+                this.game.PlayerOut(id, worker);
+            }
+            else this.PlayerOutRoom(worker, id);
+        }
+        
+    }
+
     RemovePlayer(id : string)
     {
         this.players.delete(id);
     }
 
-    PlayerOutRoom(worker : any, player_id : string, rooms : Map<string, Room>)
+    PlayerOutRoom(worker : any, player_id : string)
     {
         if(player_id == this.id) {
             this.DeleteRoom(worker);
@@ -120,6 +140,7 @@ class Room {
                 player_id : player_id,
                 host_id : this.id
             }
+
             for(const [key, player] of this.players) 
             {
                 worker.postMessage({socketId : player.sessionId, data : dataLeave});
@@ -151,7 +172,7 @@ class Room {
         //init game state
         this.game = new Game(this.players, this);
         let dataStart : any = {
-            event_name : "start"
+            event_name : "start" 
         }
         for(const [key, player] of this.players)
         {

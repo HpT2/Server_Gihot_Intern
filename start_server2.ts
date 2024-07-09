@@ -143,10 +143,12 @@ if (isMainThread) {
                     }
                     break;
                 };
+                // console.log(json);
         processBuffer();
     }
 
     processBuffer();
+    setInterval(() => console.log(rooms.size), 1000);
 
 } else {
 

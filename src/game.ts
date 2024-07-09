@@ -14,7 +14,8 @@ class Game {
     tick_rate = 1 / 50;
     current_tick = 0;
     fixedUpdate : any;
-
+    resumeTime = 0;
+    resumeFromPause = false;
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players; 
@@ -53,7 +54,7 @@ class Game {
         }, 1000); 
     }
 
-    Tick()
+    Tick(worker : any)
     {
         this.players.forEach((player, _) => {
             if(this.current_tick - player.last_tick > 10)
@@ -62,6 +63,31 @@ class Game {
                 player.isFire = false;
             }
         }); 
+
+        if(this.resumeFromPause)
+        {
+            if(this.resumeTime > 0)
+            {
+                if(Math.abs(this.resumeTime - Math.round(this.resumeTime)) < 0.01)
+                {
+                    let dataResumeTime = {
+                        event_name : "time to resume",
+                        time : Math.round(this.resumeTime)
+                    }
+                    this.EmitToAllPlayer(worker, dataResumeTime);
+                }
+                this.resumeTime -= this.tick_rate;
+            }
+            else
+            {
+                let dataResume = {
+                    event_name : "resume"
+                }
+
+                this.EmitToAllPlayer(worker, dataResume);
+                this.resumeFromPause = false;
+            }
+        }
         //console.log(this.current_tick);
         
     }
@@ -69,7 +95,7 @@ class Game {
     FixedUpdate(worker : any)
     {  
         //process
-        this.Tick(); 
+        this.Tick(worker); 
         
         if(this.current_tick % 3 == 0)  this.EmitPlayersState(worker);
         
@@ -153,28 +179,8 @@ class Game {
 
                 //this.EmitToAllPlayer(worker, dataPositon);
 
-            case "player position":
-                let playerPos = this.players.get(json.player_id);
-                if(playerPos){
-                    playerPos.position = json._event.position;
-                }
-
-                let dataPosition = {
-                    event_name : "update player position",
-                    player_id : json.player_id, 
-                    position : json._event.position 
-                }
-
-                this.EmitToAllPlayer(worker, dataPosition);
-
-                break;
             case "player out":
-                let dataOut : any = {
-                    event_name : "player out",
-                    player_id : json.player_id
-                }
-                
-                this.EmitToAllPlayer(worker, dataOut);
+                this.PlayerOut(json.player_id, worker);
                 this.room.RemovePlayer(json.player_id);
                 if(this.players.size == 0) this.Done(1);
                 break;
@@ -187,11 +193,32 @@ class Game {
                 this.EmitToAllPlayer(worker, creepDestroyInfo);
 
                 break;
+            case 'pause':
+                // if(json.player_id != this.room.id) break;
+                let dataPause = {
+                    event_name : "pause",
+                }
 
+                this.EmitToAllPlayer(worker, dataPause);
+                break;
+            case 'resume':
+                this.resumeFromPause = true;
+                this.resumeTime = 3;
+                break;
             case "game end":
                 this.Done();
                 break;
         }  
+    }
+
+    PlayerOut(id : string, worker : any)
+    {
+        let dataOut : any = {
+            event_name : "player out",
+            player_id : id
+        }
+        
+        this.EmitToAllPlayer(worker, dataOut);
     }
 
     EmitToAllPlayer(worker: any, json : any)  
