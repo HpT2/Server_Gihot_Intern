@@ -36,6 +36,10 @@ class Player{
             this.position = json._event.position; 
             this.isFire = json._event.isFire;
         }
+        else
+        {
+            this.velocity = {x : 0, y : 0, z : 0};
+        }
         this.isDead = json._event.isDead; 
     }
 }  
