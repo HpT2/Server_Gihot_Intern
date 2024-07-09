@@ -55,7 +55,7 @@ class Game {
         }, 1000); 
     }
 
-    Tick(worker : any)
+    Tick(worker : any) 
     {
         let numDead : number = 0;
         this.players.forEach((player, _) => {
@@ -139,11 +139,6 @@ class Game {
         }
         this.EmitToAllPlayer(worker, data);
     }
-
-    GetMagnidtude(vector : any)
-    {
-        return vector.x * vector.x + vector.z * vector.z;
-    }
  
     GameListener(worker : any, json : any) : void {
 
@@ -160,14 +155,16 @@ class Game {
                     }
                     this.EmitToAllPlayer(worker, dataDoneLoad);
 
+                    let firstResume = {
+                        event_name : "resume"
+                    }
+    
+                    this.EmitToAllPlayer(worker, firstResume);
+
                     this.Run(worker); 
                 }
 
-                let firstResume = {
-                    event_name : "resume"
-                }
-
-                this.EmitToAllPlayer(worker, firstResume);
+                
 
                 break;
             case 'player state': 
@@ -177,20 +174,7 @@ class Game {
                     playerState.last_tick = this.current_tick;
                     
                 }
-
-                // let data = {
-                //     event_name : "update player velocity",
-                //     player_id : json.player_id, 
-                //     velocity : json._event.velocity,
-                //     rotation : json._event.rotation, 
-                //     position : json._event.position
-                // }
-
-                // this.EmitToAllPlayer(worker, data);
-                //this.EmitPlayersState(worker);
                 break;
-
-                //this.EmitToAllPlayer(worker, dataPositon);
 
             case "player out":
                 this.PlayerOut(json.player_id, worker);
@@ -215,8 +199,11 @@ class Game {
                 break;
 
             case 'resume':
-                this.resumeFromPause = true;
-                this.resumeTime = 3;
+                if(!this.resumeFromPause)
+                {
+                    this.resumeFromPause = true;
+                    this.resumeTime = 3;
+                }
                 break;
             
             case 'revive':
@@ -260,7 +247,7 @@ class Game {
         let dataDone = {
             event_name : "game end"
         }
-        
+
         if(state == 0) this.EmitToAllPlayer(worker, dataDone);
 
         this.room.Done(state);
