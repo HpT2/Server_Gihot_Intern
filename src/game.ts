@@ -155,6 +155,13 @@ class Game {
 
                     this.Run(worker); 
                 }
+
+                let firstResume = {
+                    event_name : "resume"
+                }
+
+                this.EmitToAllPlayer(worker, firstResume);
+                
                 break;
             case 'player state': 
                 let playerState = this.players.get(json.player_id);
