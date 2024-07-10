@@ -134,15 +134,22 @@ if (isMainThread) {
             
         } catch (error) {
             console.log(error);
-            
-        }
-        processBuffer();
+        };
+        
         //console.log(json);
         //process event
 
     }
 
-    processBuffer();
+    async function Run()
+    {
+        while(true)
+        {
+            await processBuffer();
+        }
+    }
+
+    Run();
     //setInterval(() => console.log(rooms.size), 1000);
 
 } else {
