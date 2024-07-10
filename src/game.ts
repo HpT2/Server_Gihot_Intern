@@ -16,6 +16,7 @@ class Game {
     fixedUpdate : any;
     resumeTime = 0;
     resumeFromPause = false;
+    doneSpawning = 0;
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players; 
@@ -46,7 +47,7 @@ class Game {
         //setInterval(() => this.PredictPlayerPosition(), 1000 / 80);
         //setInterval(() => this.EmitPlayersState(worker), 1000 / 10); 
         //this.FixedUpdate(worker);
-        
+        this.room.pause = false;
         this.fixedUpdate = setInterval(() => this.FixedUpdate(worker), this.tick_rate * 1000);
 
         setTimeout(() => {
@@ -141,7 +142,7 @@ class Game {
     }
  
     GameListener(worker : any, json : any) : void {
-
+        //console.log(json);
         //console.log(`Received from client (${rInfo.address}:${rInfo.port}): ${receivedData}`);
         switch(json._event.event_name)
         {
@@ -155,16 +156,14 @@ class Game {
                     }
                     this.EmitToAllPlayer(worker, dataDoneLoad);
 
-                    let firstResume = {
-                        event_name : "resume"
-                    }
-    
-                    this.EmitToAllPlayer(worker, firstResume);
+                    
 
-                    this.Run(worker); 
                 }
+                break;
+            case "spawn done":
 
-                
+                this.doneSpawning++;
+                if(this.doneSpawning == this.players.size) this.Run(worker); 
 
                 break;
             case 'player state': 

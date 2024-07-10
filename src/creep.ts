@@ -127,13 +127,13 @@ class Creep{
                 })),
                 time: Date.now() - roomInfoForSpawnCreep.timeStart
             }
-             
+
             room.players.forEach((playerInfo, _) => {
                 worker.postMessage({socketId : playerInfo.sessionId, data : sendData});
                 //server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, playerInfo.port, playerInfo.address, () => {console.log(`Send to client ${playerInfo.address}:${playerInfo.port}: ${JSON.stringify(sendData)}`);})
             });
         }
-    
+     
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
         setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*1000);
     }
@@ -143,8 +143,8 @@ class Creep{
         
         if (roomInfoForSpawnCreep == undefined) return;
 
-        roomInfoForSpawnCreep.keepSpawns = true;
-        roomInfoForSpawnCreep.timeStart = Date.now(); 
+        // roomInfoForSpawnCreep.keepSpawns = true;
+        // roomInfoForSpawnCreep.timeStart = Date.now(); 
 
         for (let i = 0; i < this.creepsToSpawn.length; i++) {
             const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
