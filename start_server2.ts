@@ -123,15 +123,7 @@ if (isMainThread) {
                     //console.log(GetPlayersInfo(players));
                     
                     break;
-                //case "start":
-                    // let pl : Player | undefined = onlinePlayers.get(json.player_id);
-                    // if(pl && !pl.in_room) {
-                    //     rooms.set(pl.id, new Room(pl, json._event.name, json._event.game_mode));
-                    //     pl.in_room = true;
-                    //     rooms.get(pl.id)?.readied_players.set(pl.id, true);
-                    //     rooms.get(pl.id)?.StartGame();
-                    // }
-                //    break;
+                    
                 default:
                     for(let [key, room] of rooms)
                     {

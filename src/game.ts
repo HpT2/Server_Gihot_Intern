@@ -171,8 +171,8 @@ class Game {
                 if(playerState){
                     playerState.SetState(json);          
                     playerState.last_tick = this.current_tick;
-                    
                 }
+                //console.log(json.player_id, json._event.isDead);
                 break;
 
             case "player out":
@@ -206,8 +206,16 @@ class Game {
                 break;
             
             case 'revive':
+                let dataRevive = {
+                    event_name : "revive",
+                    revive_player_id : json._event.revive_player_id
+                }
+
+                this.EmitToAllPlayer(worker, dataRevive);
+
                 let revivePlayer = this.players.get(json._event.player_id);
                 if(revivePlayer) revivePlayer.isDead = false;
+                
                 break;
             
             case "game end":
