@@ -11,7 +11,7 @@ class Game {
     spawner : NodeJS.Timeout | null;
     playerSpawnPos : any[] = [];
     client_side_loading : number = 0;
-    tick_rate = 1 / 50;
+    tick_rate = 1 / 40;
     current_tick = 0;
     fixedUpdate : any;
     resumeTime = 0;
@@ -104,7 +104,7 @@ class Game {
     FixedUpdate(worker : any)
     {  
         //process
-        this.Tick(worker); 
+        this.Tick(worker);  
         
         if(this.current_tick % 3 == 0)  this.EmitPlayersState(worker);
         

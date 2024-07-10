@@ -135,7 +135,7 @@ class Creep{
         }
      
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*10000);
+        setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*1000);
     }
 
     public StartSpawnProcess(room: Room, worker : any) {
