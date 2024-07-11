@@ -144,7 +144,14 @@ if (isMainThread) {
                     //console.log(GetPlayersInfo(players));
 
                     break;
-
+                case 'ping':
+                    let pingData = {
+                        event_name : "pong"
+                    }
+                    //console.log("recieve ping of" + json.sessionId);
+                    //console.log(json)
+                    worker.postMessage({ socketId: json.sessionId, data: pingData });
+                    break;
                 default:
                     for (let [key, room] of rooms) {
                         if (room.players.has(json.player_id)) {
