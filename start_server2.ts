@@ -36,17 +36,38 @@ if (isMainThread) {
         });
     }
 
+    function checkSum(buffer : Buffer, sum : number) : boolean
+    {
+        let checkSum = 0;
+        for(let i = 0; i < buffer.length; i++)
+        {
+            checkSum = (checkSum + buffer[i]) % 256;
+        }
+        return checkSum == sum;
+    }
+
     async function processBuffer() {
         await waitForBuffer(4);
 
         let length: number = parseInt(bufferStream.subarray(0, maxDataLength).toString("hex"), 16);
-        await waitForBuffer(4 + length);
-        let data: string = bufferStream.subarray(maxDataLength, maxDataLength + length).toString('utf-8');
-        console.log(length, data);
-        bufferStream = bufferStream.subarray(maxDataLength + length, bufferStream.length);
-        try {
-            let json: any = JSON.parse(data);
-            switch (json._event.event_name) {
+        //console.log("buffer length:" + length);
+        await waitForBuffer(4 + length + 1); 
+        
+        let dataBuffer : Buffer = bufferStream.subarray(maxDataLength, maxDataLength + length);
+        let data: string = dataBuffer.toString('utf-8');
+        let sumBuffer : Buffer = bufferStream.subarray(maxDataLength + length, maxDataLength + length + 1);
+        let sumData : number = parseInt(sumBuffer.toString("hex"), 16);
+        // console.log(length, data);
+        bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
+
+        if(!checkSum(dataBuffer, sumData)){
+            console.log("check sum failed with corrupted data: " + data);
+            return;
+        } 
+        //console.log("sum: " + sumData);
+        // try {
+        let json: any = JSON.parse(data);
+        switch (json._event.event_name) {
                 case 'first connect':
                     //player first connect => provide a specific id and add to online players
                     let playerID: string = v4();
@@ -129,12 +150,12 @@ if (isMainThread) {
                         }
                     }
                     break;
-            };
-            // console.log(json);
-            
-        } catch (error) {
-            console.log(error);
         };
+        //console.log(json);
+            
+        // } catch (error) {
+            //console.log(error);
+        // };
         
         //console.log(json);
         //process event
@@ -160,7 +181,7 @@ if (isMainThread) {
 
         socket.on("readable", () => {
             let data: Buffer = socket.read();
-            if (data !== null) parentPort.postMessage(data);
+            if(data !== null) parentPort.postMessage(data);
         });
 
         socket.on('error', () => { });
@@ -172,7 +193,7 @@ if (isMainThread) {
             event_name: "provide session id",
             id: socketId
         }
-        socket.write(AddLengthField(JSON.stringify(sessionInfo)), () => console.log("provided session id"));
+        socket.write(PrepareData(JSON.stringify(sessionInfo)), () => console.log("provided session id"));
 
     });
 
@@ -180,14 +201,27 @@ if (isMainThread) {
         console.log("server On");
     })
 
-    function AddLengthField(data: string) {
-        let sendBuffer: Buffer = Buffer.alloc(4 + data.length); //4B for length field
+    function calcSum(data : string)
+    {
+        let dataBuf = Buffer.from(data);
+        let sum = 0;
+        dataBuf.forEach((byte) => {
+            sum = (sum + byte) % 256;
+        });
+
+        return sum;
+    }
+
+    //Add length and check sum
+    function PrepareData(data: string) {
+        let sendBuffer: Buffer = Buffer.alloc(4 + data.length + 1); //4B for length field, 1B for check sum
         sendBuffer.writeInt32LE(data.length, 0);
         sendBuffer.write(data, 4);
+        sendBuffer[4 + data.length] = calcSum(data);
         return sendBuffer;
     }
 
     parentPort.on('message', (json: any) => {
-        sessions.get(json.socketId)?.write(AddLengthField(JSON.stringify(json.data)));
+        sessions.get(json.socketId)?.write(PrepareData(JSON.stringify(json.data)));
     })
 }
