@@ -8,7 +8,6 @@ class Game {
 
     players : Map<string, Player>;
     room : Room;
-    spawner : NodeJS.Timeout | null;
     playerSpawnPos : any[] = [];
     client_side_loading : number = 0;
     tick_rate = 1 / 40;
@@ -17,14 +16,17 @@ class Game {
     resumeTime = 0;
     resumeFromPause = false;
     doneSpawning = 0;
+    score : Map<string, number>;
+
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players; 
         this.room = room;
-        this.spawner = null; 
         let i : number = 0;
+        this.score = new Map<string, number>();
         for(const [key, player] of this.players)
         {
+            this.score.set(key, 0);
             player.position = {x : 0 + i * 5, y : 0.7, z : 0 + i * 5};
             player.Setup();
             this.playerSpawnPos.push({
@@ -155,9 +157,6 @@ class Game {
                         data : this.playerSpawnPos
                     }
                     this.EmitToAllPlayer(worker, dataDoneLoad);
-
-                    
-
                 }
                 break;
             case "spawn done":
@@ -185,9 +184,13 @@ class Game {
                     event_name : "destroy creep",
                     creep_id : json._event.creep_id, 
                 }
+                
+                let sc : any = this.score.get(json.player_id);
+                this.score.set(json.player_id, sc + 1);
 
                 this.EmitToAllPlayer(worker, creepDestroyInfo);
                 break;
+
             case 'pause':
                 // if(json.player_id != this.room.id) break;
                 let dataPause = {
@@ -252,7 +255,8 @@ class Game {
         clearInterval(this.fixedUpdate);
         Creep.getInstance().OnRoomDestroy(this.room);
         let dataDone = {
-            event_name : "game end"
+            event_name : "game end",
+            result : this.GetScore()
         }
 
         if(state == 0) this.EmitToAllPlayer(worker, dataDone);
@@ -260,6 +264,21 @@ class Game {
         this.room.Done(state);
     }
 
+    GetScore()
+    {
+        let res : any = []; 
+        for(const [key, value] of this.score)
+        {
+            let data = {
+                player_id : key,
+                enemy_kill : value
+            }
+            //console.log(value);
+            res.push(data);
+        }
+        res.sort((a : any, b : any) => a.enemy_kill - b.enemy_kill);
+        return res;
+    }
 }
 
 export default Game;

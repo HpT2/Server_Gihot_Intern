@@ -29,8 +29,9 @@ if (isMainThread) {
     function waitForBuffer(size: number) {
         return new Promise(function (resolve, reject) {
             const checkBuffer = () => {
+                //console.log(bufferStream.length); 
                 if (bufferStream.length >= size) resolve(0);
-                setTimeout(checkBuffer, 0);
+                else setTimeout(checkBuffer, 0);
             }
             checkBuffer();
         });
@@ -43,6 +44,7 @@ if (isMainThread) {
         {
             checkSum = (checkSum + buffer[i]) % 256;
         }
+        //console.log(checkSum, sum);
         return checkSum == sum;
     }
 
@@ -50,6 +52,7 @@ if (isMainThread) {
         await waitForBuffer(4);
 
         let length: number = parseInt(bufferStream.subarray(0, maxDataLength).toString("hex"), 16);
+
         //console.log("buffer length:" + length);
         await waitForBuffer(4 + length + 1); 
         
