@@ -167,7 +167,7 @@ class Game {
                 break;
             case 'player state': 
                 let playerState = this.players.get(json.player_id);
-                if(playerState){
+                if(playerState && !playerState.isDead){
                     playerState.SetState(json);          
                     playerState.last_tick = this.current_tick;
                 }
