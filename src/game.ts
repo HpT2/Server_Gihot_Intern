@@ -17,7 +17,8 @@ class Game {
     resumeFromPause = false;
     doneSpawning = 0;
     score : Map<string, number>;
-
+    gameState : any;
+    isPause : boolean = false;
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players; 
@@ -67,6 +68,7 @@ class Game {
                 player.velocity = {x : 0, y : 0, z : 0};
                 player.isFire = false;
             }
+            if(player.isImmutable > 0) player.isImmutable -= this.tick_rate;
             if(player.isDead) numDead++;
         }); 
 
@@ -79,24 +81,13 @@ class Game {
         {
             if(this.resumeTime > 0)
             {
-                if(Math.abs(this.resumeTime - Math.round(this.resumeTime)) < 0.01)
-                {
-                    let dataResumeTime = {
-                        event_name : "time to resume",
-                        time : Math.round(this.resumeTime)
-                    }
-                    this.EmitToAllPlayer(worker, dataResumeTime);
-                }
                 this.resumeTime -= this.tick_rate;
             }
             else
             {
-                let dataResume = {
-                    event_name : "resume"
-                }
-
-                this.EmitToAllPlayer(worker, dataResume);
+                this.isPause = false;
                 this.resumeFromPause = false;
+                Creep.getInstance().StartSpawnProcess(worker, this.room);
             }
         }
         //console.log(this.current_tick);
@@ -108,7 +99,7 @@ class Game {
         //process
         this.Tick(worker);  
         
-        if(this.current_tick % 3 == 0)  this.EmitPlayersState(worker);
+        if(this.current_tick % 3 == 0)  this.EmitGameState(worker);
         
 
         this.current_tick++;
@@ -132,15 +123,33 @@ class Game {
         }) 
         return states;
     }
- 
-    EmitPlayersState(worker : any)
+    
+    GetGameState()
     {
+        this.gameState = {
+            ...this.gameState, 
+            player_states : {
+                states : this.GetPlayersState()
+            },
+            isPause : this.isPause,
+            resume : {
+                isResume : this.resumeFromPause,
+                time : this.resumeTime
+            }
+        };
+    } 
+
+    EmitGameState(worker : any)
+    {
+        this.GetGameState();
         let data = {
-            event_name : "update players state",
+            event_name : "update game state",
             server_tick : this.current_tick,
-            states : this.GetPlayersState()
+            state : this.gameState,
+
         }
         this.EmitToAllPlayer(worker, data);
+        this.gameState = {};
     }
  
     GameListener(worker : any, json : any) : void {
@@ -193,11 +202,8 @@ class Game {
 
             case 'pause':
                 // if(json.player_id != this.room.id) break;
-                let dataPause = {
-                    event_name : "pause",
-                }
-
-                this.EmitToAllPlayer(worker, dataPause);
+                this.isPause = true;
+                Creep.getInstance().OnRoomDestroy(this.room);
                 break;
 
             case 'resume':
@@ -209,15 +215,12 @@ class Game {
                 break;
             
             case 'revive':
-                let dataRevive = {
-                    event_name : "revive",
-                    revive_player_id : json._event.revive_player_id
-                }
-
-                this.EmitToAllPlayer(worker, dataRevive);
 
                 let revivePlayer = this.players.get(json._event.player_id);
-                if(revivePlayer) revivePlayer.isDead = false;
+                if(revivePlayer) {
+                    revivePlayer.isDead = false;
+                    revivePlayer.isImmutable = 0.1;
+                }
                 
                 break;
             
