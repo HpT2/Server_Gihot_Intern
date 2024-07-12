@@ -3,6 +3,7 @@ import Room from "./room";
 import Creep from "./creep";
 import * as dgram from 'dgram';
 import { GetRandom } from "./function";
+import PowerUp from "./power_up";
 
 class Game {
 
@@ -19,6 +20,7 @@ class Game {
     score : Map<string, number>;
     gameState : any;
     isPause : boolean = false;
+
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players; 
@@ -54,8 +56,9 @@ class Game {
         this.fixedUpdate = setInterval(() => this.FixedUpdate(worker), this.tick_rate * 1000);
 
         setTimeout(() => {
-            Creep.getInstance().OnGameStart(this.room);
-            Creep.getInstance().StartSpawnProcess(this.room, worker);
+            Creep.getInstance().OnGameStart(this.room.id);
+            Creep.getInstance().StartSpawnProcess(this.room.id, this.gameState);
+            PowerUp.getInstance().OnGameStart(this.room.id);
         }, 1000); 
     }
 
@@ -189,21 +192,16 @@ class Game {
                 break;
 
             case "creep destroy":
-                let creepDestroyInfo = {
-                    event_name : "destroy creep",
-                    creep_id : json._event.creep_id, 
-                }
+                Creep.getInstance().DestroyCreep(json._event.shared_id, json._event.power_up_spawn_info, this.room.id, this.gameState);
                 
                 let sc : any = this.score.get(json.player_id);
                 this.score.set(json.player_id, sc + 1);
 
-                this.EmitToAllPlayer(worker, creepDestroyInfo);
                 break;
 
             case 'pause':
                 // if(json.player_id != this.room.id) break;
                 this.isPause = true;
-                Creep.getInstance().OnRoomDestroy(this.room);
                 break;
 
             case 'resume':
@@ -256,7 +254,8 @@ class Game {
     {
         //console.log("done");
         clearInterval(this.fixedUpdate);
-        Creep.getInstance().OnRoomDestroy(this.room);
+        Creep.getInstance().OnGameEnd(this.room.id);
+        PowerUp.getInstance().OnGameEnd(this.room.id);
         let dataDone = {
             event_name : "game end",
             result : this.GetScore()

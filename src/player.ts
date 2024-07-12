@@ -1,4 +1,3 @@
-
 class Player{
 
     name : string;

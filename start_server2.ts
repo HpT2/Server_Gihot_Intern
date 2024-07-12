@@ -1,7 +1,6 @@
 import * as net from 'net'
 import Room from "./src/room";
 import Player from "./src/player";
-import Creep from "./src/creep";
 import { v4 } from 'uuid';
 const { Worker, isMainThread, parentPort } = require('worker_threads');
 

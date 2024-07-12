@@ -1,5 +1,5 @@
 import { GetRandom } from "./function";
-import Room from "./room";
+import PowerUp from "./power_up";
 
 class CreepSpawnInfo {
     startSpawnTime: number;
@@ -17,11 +17,10 @@ class CreepSpawnInfo {
 
 class Creep{
     creepsToSpawn: CreepSpawnInfo[];
-    roomTimeCounts: number[];
-    roomKeepSpawns: boolean[];
     roomInfosForSpawnCreep: Map<string, {
         timeStart: number;
         keepSpawns: boolean;
+        creeps_manage: boolean[]; 
     }>;
     private static instance: Creep;
 
@@ -29,21 +28,18 @@ class Creep{
     {   
         this.creepsToSpawn = [
             new CreepSpawnInfo(0,2,5,4),
-            new CreepSpawnInfo(20,3,7,3),
-            new CreepSpawnInfo(45,5,10,3),
-            new CreepSpawnInfo(90,5,10,3),
-            new CreepSpawnInfo(120,7,15,3),
-            new CreepSpawnInfo(160,15,25,1),
-            new CreepSpawnInfo(200,20,30,1)
+            new CreepSpawnInfo(20000,3,7,3),
+            new CreepSpawnInfo(45000,5,10,3),
+            new CreepSpawnInfo(90000,5,10,3),
+            new CreepSpawnInfo(120000,7,15,3),
+            new CreepSpawnInfo(160000,15,25,1),
+            new CreepSpawnInfo(200000,20,30,1)
         ]
-
-        this.roomTimeCounts = [];
-
-        this.roomKeepSpawns = [];
 
         this.roomInfosForSpawnCreep = new Map<string, {
             timeStart: number;
             keepSpawns: boolean;
+            creeps_manage: boolean[];
         }>;
     }  
     
@@ -54,104 +50,77 @@ class Creep{
         return Creep.instance;
     }
 
-    public OnRoomCreateMock() {
-        //Mock
-        this.roomKeepSpawns.push(true);
-        this.roomTimeCounts.push(Date.now());
-    }
-
-    //Mock: Delete when use =))
-    private SpawnCreepByIdRepeatMock(id: number, roomId: number, worker : any, socketId : string) {
-        if (!this.roomKeepSpawns[roomId]) return;
-
-        let sendData = {
-            event_name : "spawn creep",
-            creepTypeInt: id,
-            spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
-                x: GetRandom(-38, 38),
-                y: 0,
-                z: GetRandom(-38, 38)
-            })),
-            time: Date.now() - this.roomTimeCounts[roomId]
-        }
-        worker.postMessage({socketId : socketId, data : sendData});
-
-
-        const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeatMock(id, roomId, worker, socketId) }, randomDelay*1000);
-    }
-
-    //Mock: Delete when use =))
-    // public StartSpawnProcessMock(roomId: number, server: dgram.Socket, port: number, address: string) {
-    //     this.roomKeepSpawns[roomId] = true;
-    //     this.roomTimeCounts[roomId] = Date.now();
-    //     for (let i = 0; i < this.creepsToSpawn.length; i++) {
-    //         const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
-    //         setTimeout(() => {
-    //             this.SpawnCreepByIdRepeatMock(i, roomId, server, worker, )
-    //         }, initialDelay);
-    //     }
-    // }
-
-    public OnGameStart(room: Room) {
-        this.roomInfosForSpawnCreep.set(room.id, {
+    public OnGameStart(room_id: string) {
+        this.roomInfosForSpawnCreep.set(room_id, {
             timeStart: Date.now(),
-            keepSpawns: true
+            keepSpawns: true,
+            creeps_manage: []
         })
     }
 
-    public OnRoomDestroy(room: Room) {
-        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room.id);
+    public OnGameEnd(room_id: string) {
+        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
         
         if (roomInfoForSpawnCreep == undefined) return;
 
         roomInfoForSpawnCreep.keepSpawns = false;
     } 
 
-    private SpawnCreepByIdRepeat(id: number, worker : any, room: Room) {
-        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room.id);
+    private SpawnCreepByIdRepeat(id: number, room_id: string, game_state: any) {
+        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
         
         if (roomInfoForSpawnCreep == undefined) return;
 
         if (!roomInfoForSpawnCreep.keepSpawns) return;
 
-        if(!room.pause)
-        {
-            let sendData = {
-                event_name : "spawn creep", 
-                creepTypeInt: id, 
-                spawnPos: Array.from({ length: this.creepsToSpawn[id].spawnRate }, () => ({
-                    x: GetRandom(-38, 38),
-                    y: 0,
-                    z: GetRandom(-38, 38)
-                })),
-                time: Date.now() - roomInfoForSpawnCreep.timeStart
-            }
+        if (!game_state.creeps_spawn) {
+            game_state.creeps_spawn = [];
+        }
 
-            room.players.forEach((playerInfo, _) => {
-                worker.postMessage({socketId : playerInfo.sessionId, data : sendData});
-                //server.send(JSON.stringify(sendData), 0, JSON.stringify(sendData).length, playerInfo.port, playerInfo.address, () => {console.log(`Send to client ${playerInfo.address}:${playerInfo.port}: ${JSON.stringify(sendData)}`);})
+        for (let i = 0; i < this.creepsToSpawn[id].spawnRate; i++) {
+            roomInfoForSpawnCreep.creeps_manage.push(true);
+            game_state.creeps_spawn.push({
+                type_int: id, 
+                spawn_pos: {
+                    x: GetRandom(30, 120),
+                    y: 0,
+                    z: GetRandom(-120, 60)
+                },
+                time: Date.now() - roomInfoForSpawnCreep.timeStart,
+                shared_id: roomInfoForSpawnCreep.creeps_manage.length - 1
             });
         }
-     
+
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeat(id, worker, room) }, randomDelay*1000);
+        setTimeout(() => { this.SpawnCreepByIdRepeat(id, room_id, game_state) }, randomDelay*1000);
     }
 
-    public StartSpawnProcess(room: Room, worker : any) {
-        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room.id);
+    public StartSpawnProcess(room_id: string, game_state: any) {
+        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
         
         if (roomInfoForSpawnCreep == undefined) return;
 
-        // roomInfoForSpawnCreep.keepSpawns = true;
-        // roomInfoForSpawnCreep.timeStart = Date.now(); 
-
         for (let i = 0; i < this.creepsToSpawn.length; i++) {
-            const initialDelay = GetRandom(this.creepsToSpawn[i].minSpawnIntervalTime, this.creepsToSpawn[i].maxSpawnIntervalTime);
             setTimeout(() => {
-                this.SpawnCreepByIdRepeat(i, worker, room)
-            }, initialDelay);
+                this.SpawnCreepByIdRepeat(i, room_id, game_state)
+            }, this.creepsToSpawn[i].startSpawnTime);
         }
+    }
+
+    public DestroyCreep(shared_id : number, power_up_spawn_info: {type_int: number, spawn_pos: {x: number, y: number, z: number}} | null, room_id : string, game_state: any) {
+        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
+        if (roomInfoForSpawnCreep == undefined) return;
+
+        if (roomInfoForSpawnCreep.creeps_manage[shared_id] == false) return;
+
+        if (!game_state.creeps_destroy) {
+            game_state.creeps_destroy = [];
+        }
+
+        game_state.creeps_destroy.push({
+            shared_id : shared_id, 
+            power_up_spawn_info : PowerUp.getInstance().SpawnPowerUp(power_up_spawn_info, room_id)
+        });
     }
 }
 
