@@ -12,7 +12,7 @@ class Player{
     isFire : boolean = false;
     last_tick : number = 0;
     isDead : boolean = false;
-    isImmutable : number = 0;
+    isImmutable : number = -1;
     constructor(id : string, sessionId : string, gun_id : number = 1 ,name : string = "quoc")
     {   
         this.name = name;
@@ -26,7 +26,7 @@ class Player{
         this.isFire  = false;
         this.last_tick  = 0;
         this.isDead = false;
-        this.isImmutable = 0;
+        this.isImmutable = -1;
     }
 
     SetState(json : any)

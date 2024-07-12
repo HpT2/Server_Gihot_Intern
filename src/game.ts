@@ -68,7 +68,9 @@ class Game {
                 player.velocity = {x : 0, y : 0, z : 0};
                 player.isFire = false;
             }
-            if(player.isImmutable > 0) player.isImmutable -= this.tick_rate;
+            if(player.isImmutable > 0) {
+                player.isImmutable -= this.tick_rate;
+            }
             if(player.isDead) numDead++;
         }); 
 
@@ -216,12 +218,14 @@ class Game {
             
             case 'revive':
 
-                let revivePlayer = this.players.get(json._event.player_id);
+                let revivePlayer = this.players.get(json._event.revive_player_id);
                 if(revivePlayer) {
+                    
                     revivePlayer.isDead = false;
-                    revivePlayer.isImmutable = 0.1;
+                    revivePlayer.isImmutable = 1;
+                    console.log(revivePlayer.isDead);
                 }
-                
+               
                 break;
             
             case "game end":
