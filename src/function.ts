@@ -1,4 +1,3 @@
-import * as net from 'net'
 import Player from './player';
 import Room from './room';
 import * as dgram from 'dgram';

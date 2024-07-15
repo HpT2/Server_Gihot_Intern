@@ -125,6 +125,8 @@ class Creep{
             shared_id : shared_id, 
             power_up_spawn_info: PowerUp.getInstance().SpawnPowerUp(power_up_spawn_info, room_id)
         });
+
+        roomInfoForSpawnCreep.creeps_manage[shared_id] = false;
     }
 }
 
