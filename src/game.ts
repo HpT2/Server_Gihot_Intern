@@ -1,8 +1,6 @@
 import Player from "./player";
 import Room from "./room";
 import Creep from "./creep";
-import * as dgram from 'dgram';
-import { GetRandom } from "./function";
 import PowerUp from "./power_up";
 
 class Game {
@@ -57,7 +55,7 @@ class Game {
 
         setTimeout(() => {
             Creep.getInstance().OnGameStart(this.room.id);
-            Creep.getInstance().StartSpawnProcess(this.room.id, this.gameState);
+            Creep.getInstance().StartSpawnProcess(this.room.id);
             PowerUp.getInstance().OnGameStart(this.room.id);
         }, 1000); 
     }
@@ -92,7 +90,7 @@ class Game {
             {
                 this.isPause = false;
                 this.resumeFromPause = false;
-                Creep.getInstance().StartSpawnProcess(worker, this.room);
+                Creep.getInstance().StartSpawnProcess(worker);
             }
         }
         //console.log(this.current_tick);
@@ -151,7 +149,6 @@ class Game {
             event_name : "update game state",
             server_tick : this.current_tick,
             state : this.gameState,
-
         }
         this.EmitToAllPlayer(worker, data);
         this.gameState = {};
@@ -194,11 +191,15 @@ class Game {
                 break;
 
             case "creep destroy":
-                Creep.getInstance().DestroyCreep(json._event.shared_id, json._event.power_up_spawn_info, this.room.id, this.gameState);
+                Creep.getInstance().DestroyCreep(json._event.shared_id, json._event.power_up_spawn_info, this.room.id);
                 
                 let sc : any = this.score.get(json.player_id);
                 this.score.set(json.player_id, sc + 1);
 
+                break;
+
+            case "power up pick":
+                PowerUp.getInstance().PlayerPickUpPowerUp(json._event.shared_id, json._event.player_id, this.room.id);
                 break;
 
             case 'pause':

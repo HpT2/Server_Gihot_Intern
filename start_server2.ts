@@ -236,3 +236,5 @@ if (isMainThread) {
         sessions.get(json.socketId)?.write(PrepareData(JSON.stringify(json.data)));
     })
 }
+
+export default rooms;

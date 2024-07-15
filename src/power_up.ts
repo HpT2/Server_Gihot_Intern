@@ -1,3 +1,5 @@
+import rooms from "../start_server2";
+
 class PowerUp{
     static Power_Up_Time_To_Live: number = 15000;
 
@@ -25,9 +27,7 @@ class PowerUp{
     }
 
     public SpawnPowerUp(power_up_spawn_info: {type_int: number, spawn_pos: {x: number, y: number, z: number}} | null, room_id: string): {type_int: number, spawn_pos: {x: number, y: number, z: number}, shared_id: number} | null {
-        if (power_up_spawn_info == null) {
-            return null;
-        }
+        if (power_up_spawn_info == null) return null;
 
         const room_info_for_manage_power_up = this.room_infos_for_manage_power_up.get(room_id);
         if (room_info_for_manage_power_up == undefined) return null;
@@ -38,10 +38,13 @@ class PowerUp{
             room_info_for_manage_power_up[idx] = false;
         }, PowerUp.Power_Up_Time_To_Live)
 
-        return {...power_up_spawn_info, shared_id: idx};
+        return {
+            ...power_up_spawn_info, 
+            shared_id: idx
+        };
     }
 
-    public PlayerPickUpPowerUp(shared_id: number, player_id: string, room_id: string, game_state: any) {
+    public PlayerPickUpPowerUp(shared_id: number, player_id: string, room_id: string) {
         const room_info_for_manage_power_up = this.room_infos_for_manage_power_up.get(room_id);
         if (room_info_for_manage_power_up == undefined) return;
 
@@ -49,10 +52,12 @@ class PowerUp{
 
         room_info_for_manage_power_up[shared_id] = false;
         
-        if (!game_state.power_ups_pick) {
-            game_state.power_ups_pick = [];
+        const game_state = rooms.get(room_id)?.game?.gameState;
+
+        if (!game_state.power_up_pick_infos) {
+            game_state.power_up_pick_infos = [];
         }
-        game_state.power_ups_pick.push({
+        game_state.power_up_pick_infos.push({
             player_id: player_id,
             shared_id: shared_id
         });
