@@ -20,9 +20,10 @@ class Game {
     isPause : boolean = false;
     isLevelUp : boolean = false;
     levelUpCount : number = 0;
-
+    eventManager : EventManager;
     constructor(players : Map<string, Player>, room : Room)
     {
+        this.eventManager = new EventManager();
         this.players = players; 
         this.room = room;
         let i : number = 0;
@@ -95,6 +96,7 @@ class Game {
                 Creep.getInstance().StartSpawnProcess(worker);
             }
         }
+        this.eventManager.Tick();
         //console.log(this.current_tick);
         
     }
