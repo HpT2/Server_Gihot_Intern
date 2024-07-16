@@ -12,6 +12,7 @@ class Player{
     last_tick : number = 0;
     isDead : boolean = false;
     isImmutable : number = -1;
+    speedBoost : number = 0;
     constructor(id : string, sessionId : string, gun_id : number = 1 ,name : string = "quoc")
     {   
         this.name = name;
@@ -36,6 +37,7 @@ class Player{
             this.rotation = json._event.rotation;
             this.position = json._event.position; 
             this.isFire = json._event.isFire;
+            this.speedBoost = json._event.speedBoost;
         }
         else 
         {

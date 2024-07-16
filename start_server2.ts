@@ -51,10 +51,11 @@ if (isMainThread) {
         await waitForBuffer(4);
 
         let length: number = parseInt(bufferStream.subarray(0, maxDataLength).toString("hex"), 16);
-
-        //console.log("buffer length:" + length);
-        await waitForBuffer(4 + length + 1); 
         
+        //console.log("buffer length:" + length);
+        //await waitForBuffer(4 + length + 1); 
+       
+
         let dataBuffer : Buffer = bufferStream.subarray(maxDataLength, maxDataLength + length);
         let data: string = dataBuffer.toString('utf-8');
         let sumBuffer : Buffer = bufferStream.subarray(maxDataLength + length, maxDataLength + length + 1);
@@ -64,7 +65,7 @@ if (isMainThread) {
 
         if(!checkSum(dataBuffer, sumData)){
             console.log("check sum failed with corrupted data: " + data);
-            bufferStream = bufferStream.subarray(maxDataLength + data.length + 1, bufferStream.length);
+            bufferStream = Buffer.from('');
             return;
         } 
         bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
@@ -151,7 +152,7 @@ if (isMainThread) {
                     }
                     //console.log("recieve ping of" + json.sessionId);
                     //console.log(json)
-                    setTimeout(() => worker.postMessage({ socketId: json.sessionId, data: pingData }), 0)
+                    worker.postMessage({ socketId: json.sessionId, data: pingData });
                     break;
                 default:
                     for (let [key, room] of rooms) {

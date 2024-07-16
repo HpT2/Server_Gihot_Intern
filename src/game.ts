@@ -18,6 +18,8 @@ class Game {
     score : Map<string, number>;
     gameState : any;
     isPause : boolean = false;
+    isLevelUp : boolean = false;
+    levelUpCount : number = 0;
 
     constructor(players : Map<string, Player>, room : Room)
     {
@@ -119,7 +121,8 @@ class Game {
                 rotation : player.rotation,
                 position : player.position,
                 isFire : player.isFire,
-                isDead : player.isDead
+                isDead : player.isDead,
+                speedBoost : player.speedBoost
             }
             if(player.isFire) player.isFire = false;
             states.push(data);
@@ -138,7 +141,8 @@ class Game {
             resume : {
                 isResume : this.resumeFromPause,
                 time : this.resumeTime
-            }
+            },
+            isLevelUp : this.isLevelUp
         };
     } 
 
@@ -179,10 +183,32 @@ class Game {
             case 'player state': 
                 let playerState = this.players.get(json.player_id);
                 if(playerState && !playerState.isDead){
-                    playerState.SetState(json);          
+                    playerState.SetState(json);   
+                           
                     playerState.last_tick = this.current_tick;
                 }
                 //console.log(json.player_id, json._event.isDead);
+                break;
+            
+            case 'level up':
+                this.levelUpCount++;
+                if(this.levelUpCount == this.players.size)
+                {
+                    this.isLevelUp = true;
+                    this.isPause = true;
+                    Creep.getInstance().OnGameEnd(this.room.id);
+                }
+                break;
+
+            case 'choose level up':
+                //console.log(this.levelUpCount);
+                this.levelUpCount--;
+                if(this.levelUpCount == 0) 
+                {
+                    this.isLevelUp = false;
+                    this.isPause = false;
+                    Creep.getInstance().StartSpawnProcess(this.room.id);
+                }
                 break;
 
             case "player out":
@@ -205,6 +231,7 @@ class Game {
             case 'pause':
                 // if(json.player_id != this.room.id) break;
                 this.isPause = true;
+                Creep.getInstance().OnGameEnd(this.room.id);
                 break;
 
             case 'resume':
@@ -222,7 +249,7 @@ class Game {
                     
                     revivePlayer.isDead = false;
                     revivePlayer.isImmutable = 1;
-                    console.log(revivePlayer.isDead);
+                    //console.log(revivePlayer.isDead);
                 }
                
                 break;

@@ -67,6 +67,7 @@ class Creep{
         roomInfoForSpawnCreep.keepSpawns = false;
     } 
 
+
     private SpawnCreepByIdRepeat(id: number, room_id: string) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
         
@@ -100,9 +101,10 @@ class Creep{
 
     public StartSpawnProcess(room_id: string) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
-        
         if (roomInfoForSpawnCreep == undefined) return;
 
+        roomInfoForSpawnCreep.keepSpawns = true;
+        
         for (let i = 0; i < this.creepsToSpawn.length; i++) {
             setTimeout(() => {
                 this.SpawnCreepByIdRepeat(i, room_id)
@@ -112,6 +114,7 @@ class Creep{
 
     public DestroyCreep(shared_id : number, power_up_spawn_info: {type_int: number, spawn_pos: {x: number, y: number, z: number}} | null, room_id : string) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
+        console.log("creep destroyed: "+shared_id);
         if (roomInfoForSpawnCreep == undefined) return;
 
         if (roomInfoForSpawnCreep.creeps_manage[shared_id] == false) return;
