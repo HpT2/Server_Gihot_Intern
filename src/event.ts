@@ -12,11 +12,16 @@ class GameEvent
         return {
             id : this.id,
             end : this.end,
-            endState : this.endState
+            endState : this.endState,
+            timeToEnd : this.timeToEnd
         }
     }
     Tick(){
         this.timeToEnd -= TICK_RATE;
+    }
+
+    Process(json : any) {
+
     }
 
 }
@@ -44,16 +49,17 @@ class ChainEvent extends GameEvent{
 class ShareAttributeEvent extends GameEvent {
     maxHP : number = 0 ;
     curHP : number ;
-    constructor(players : Player[])
+    constructor(players : any)
     {
         super();
         this.id = 2;
-        players.forEach((player) => {
+        for(const [key, player] of players) {
             this.maxHP += player.maxHP;
-        })
-        this.maxHP /= players.length;
+        }
+        this.maxHP /= players.size;
         this.curHP = this.maxHP;
-        this.timeToEnd = 10;
+        this.timeToEnd = 30;
+  
     }
 
     GetInfo(): any {
@@ -84,6 +90,12 @@ class ShareAttributeEvent extends GameEvent {
             this.end = true;
             this.endState = false;
         }
+        console.log(this.curHP);
+    }
+
+    Process(json: any): void {
+        super.Process(json);
+        this.TakeDamage(json.damage);
     }
 }
 
@@ -154,21 +166,21 @@ class RaidBossEvent extends GameEvent {
 
 class EventManager
 {
-    currentEvents : any[];
+    currentEvents : Map<number, GameEvent>;
     timeToNextEvent : number;
     game : Game;
     eventList : any = {
         0 : ChainEvent,
-        1 : ShareAttributeEvent,
-        2 : OnePermaDeathEvent,
-        3 : QuickTimeEvent,
-        4 : RaidBossEvent
+        2 : ShareAttributeEvent,
+        3 : OnePermaDeathEvent,
+        4 : QuickTimeEvent,
+        5 : RaidBossEvent
     };
 
     constructor(game : Game)
     {
-        this.currentEvents = [];
-        this.timeToNextEvent = 10;
+        this.currentEvents = new Map<number, GameEvent>();
+        this.timeToNextEvent = 5;
         this.game = game;
     }
 
@@ -186,9 +198,9 @@ class EventManager
         {
             //random event: 
             //let r : number = Math.floor(Math.random() * Object.keys(this.eventList).length);
-            let r = 1;
+            let r = 2;
             let ev = new this.eventList[r](this.game.players);
-            this.currentEvents.push(ev);
+            this.currentEvents.set(r, ev);
             this.timeToNextEvent = Math.floor(Math.random() * 20) + 10;
         }
     }
@@ -204,10 +216,15 @@ class EventManager
             this.game.gameState.game_event.event_info.push(event.GetInfo());
             if(event.end) 
             {
-                let evIndex = this.currentEvents.indexOf(event);
-                this.currentEvents.splice(evIndex, 1);
+                this.currentEvents.delete(event.id);
             }
         })
+    }
+
+    ProcessEvent(json : any)
+    {
+        // console.log(json);
+        this.currentEvents.get(json.id)?.Process(json);
     }
 }
 

@@ -65,6 +65,20 @@ class Game {
 
     Tick(worker : any) 
     {
+        if(this.resumeFromPause)
+        {
+            if(this.resumeTime > 0)
+            {
+                this.resumeTime -= TICK_RATE;
+            }
+            else
+            {
+                this.isPause = false;
+                this.resumeFromPause = false;
+                Creep.getInstance().StartSpawnProcess(worker);
+            }
+        }
+        if(this.isPause) return;
         let numDead : number = 0;
         this.players.forEach((player, _) => {
             if(this.current_tick - player.last_tick > 10)
@@ -83,19 +97,6 @@ class Game {
             this.Done(0, worker);
         }
 
-        if(this.resumeFromPause)
-        {
-            if(this.resumeTime > 0)
-            {
-                this.resumeTime -= TICK_RATE;
-            }
-            else
-            {
-                this.isPause = false;
-                this.resumeFromPause = false;
-                Creep.getInstance().StartSpawnProcess(worker);
-            }
-        }
         this.eventManager.Tick();
         //console.log(this.current_tick);
         
@@ -103,6 +104,7 @@ class Game {
 
     FixedUpdate(worker : any)
     {  
+        
         //process
         this.Tick(worker);  
         
@@ -256,7 +258,9 @@ class Game {
                 }
                
                 break;
-            
+            case "game event":
+                this.eventManager.ProcessEvent(json._event);
+                break;
             case "game end":
                 this.Done(0, worker);
                 break;
