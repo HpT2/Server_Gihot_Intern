@@ -2,14 +2,14 @@ import Player from "./player";
 import Room from "./room";
 import Creep from "./creep";
 import PowerUp from "./power_up";
-
+import EventManager from "./event";
+import { TICK_RATE } from "../start_server2";
 class Game {
 
     players : Map<string, Player>;
     room : Room;
     playerSpawnPos : any[] = [];
     client_side_loading : number = 0;
-    tick_rate = 1 / 40;
     current_tick = 0;
     fixedUpdate : any;
     resumeTime = 0;
@@ -23,7 +23,7 @@ class Game {
     eventManager : EventManager;
     constructor(players : Map<string, Player>, room : Room)
     {
-        this.eventManager = new EventManager();
+        this.eventManager = new EventManager(this);
         this.players = players; 
         this.room = room;
         let i : number = 0;
@@ -54,7 +54,7 @@ class Game {
         //setInterval(() => this.EmitPlayersState(worker), 1000 / 10); 
         //this.FixedUpdate(worker);
         this.room.pause = false;
-        this.fixedUpdate = setInterval(() => this.FixedUpdate(worker), this.tick_rate * 1000);
+        this.fixedUpdate = setInterval(() => this.FixedUpdate(worker), TICK_RATE * 1000);
 
         setTimeout(() => {
             Creep.getInstance().OnGameStart(this.room.id);
@@ -73,7 +73,7 @@ class Game {
                 player.isFire = false;
             }
             if(player.isImmutable > 0) {
-                player.isImmutable -= this.tick_rate;
+                player.isImmutable -= TICK_RATE;
             }
             if(player.isDead) numDead++;
         }); 
@@ -87,7 +87,7 @@ class Game {
         {
             if(this.resumeTime > 0)
             {
-                this.resumeTime -= this.tick_rate;
+                this.resumeTime -= TICK_RATE;
             }
             else
             {
@@ -151,6 +151,7 @@ class Game {
     EmitGameState(worker : any)
     {
         this.GetGameState();
+        this.eventManager.GetEventInfo();
         let data = {
             event_name : "update game state",
             server_tick : this.current_tick,

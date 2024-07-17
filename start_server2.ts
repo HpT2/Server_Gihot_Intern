@@ -6,6 +6,9 @@ const { Worker, isMainThread, parentPort } = require('worker_threads');
 
 import { GetPlayersInfo, GetRoomsInfo } from "./src/function";
 
+const tick_rate = 1 / 40;
+export const TICK_RATE = tick_rate;
+
 const maxDataLength: number = 4;
 
 let onlinePlayers: Map<string, Player> = new Map<string, Player>();
