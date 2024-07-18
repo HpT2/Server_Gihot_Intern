@@ -75,6 +75,7 @@ class ShareAttributeEvent extends GameEvent {
 
     Tick(): void {
         super.Tick();
+        //console.log(this.timeToEnd);
         this.timeToEnd -= TICK_RATE;
         if(this.timeToEnd < 0)
         {
@@ -85,12 +86,13 @@ class ShareAttributeEvent extends GameEvent {
 
     TakeDamage(damage : number) : void {
         this.curHP -= damage;
-        if(this.curHP <= 0)
+        if(this.curHP > this.maxHP) this.curHP = this.maxHP;
+        else if(this.curHP <= 0)
         {
             this.end = true;
             this.endState = false;
         }
-        console.log(this.curHP);
+        //console.log(this.curHP);
     }
 
     Process(json: any): void {
@@ -186,6 +188,7 @@ class EventManager
 
     Tick()
     {
+        //console.log(this.timeToNextEvent);
         if(this.currentEvents)
         {
             this.currentEvents.forEach((event) => {
@@ -201,7 +204,7 @@ class EventManager
             let r = 2;
             let ev = new this.eventList[r](this.game.players);
             this.currentEvents.set(r, ev);
-            this.timeToNextEvent = Math.floor(Math.random() * 20) + 10;
+            this.timeToNextEvent = Math.floor(Math.random() * 20) + 100;
         }
     }
 
