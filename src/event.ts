@@ -50,9 +50,7 @@ class ChainEvent extends GameEvent{
 class ShareAttributeEvent extends GameEvent {
     maxHP : number = 0 ;
     curHP : number ;
-    maxHP : number = 0 ;
-    curHP : number ;
-    constructor(players : anyplayers : any)
+    constructor(players : any)
     {
         super();
         this.id = 2;
@@ -62,7 +60,6 @@ class ShareAttributeEvent extends GameEvent {
         this.maxHP /= players.size;
         this.curHP = this.maxHP;
         this.timeToEnd = 30;
-  
     }
 
     GetInfo(): any {
@@ -73,39 +70,11 @@ class ShareAttributeEvent extends GameEvent {
                 maxHP : this.maxHP,
                 curHP : this.curHP
             }
-            share : {
-                maxHP : this.maxHP,
-                curHP : this.curHP
-            }
         }
     }
 
     Tick(): void {
         super.Tick();
-        //console.log(this.timeToEnd);
-        this.timeToEnd -= TICK_RATE;
-        if(this.timeToEnd < 0)
-        {
-            this.end = true;
-            this.endState = true;
-        }
-    }
-
-    TakeDamage(damage : number) : void {
-        this.curHP -= damage;
-        if(this.curHP > this.maxHP) this.curHP = this.maxHP;
-        else if(this.curHP <= 0)
-        {
-            this.end = true;
-            this.endState = false;
-        }
-        //console.log(this.curHP);
-    }
-
-    Process(json: any): void {
-        super.Process(json);
-        this.TakeDamage(json.damage);
-    }
         //console.log(this.timeToEnd);
         this.timeToEnd -= TICK_RATE;
         if(this.timeToEnd < 0)
@@ -277,7 +246,6 @@ class RaidBossEvent extends GameEvent {
 
 class EventManager
 {
-    currentEvents : Map<number, GameEvent>;
     currentEvents : Map<number, GameEvent>;
     timeToNextEvent : number;
     game : Game;
