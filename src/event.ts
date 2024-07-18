@@ -1,6 +1,7 @@
 import Game from "./game";
 import { TICK_RATE } from "../start_server2";
 import Player from "./player";
+import { GetRandom } from "./function";
 
 class GameEvent
 {
@@ -49,7 +50,9 @@ class ChainEvent extends GameEvent{
 class ShareAttributeEvent extends GameEvent {
     maxHP : number = 0 ;
     curHP : number ;
-    constructor(players : any)
+    maxHP : number = 0 ;
+    curHP : number ;
+    constructor(players : anyplayers : any)
     {
         super();
         this.id = 2;
@@ -66,6 +69,10 @@ class ShareAttributeEvent extends GameEvent {
         let data : any = super.GetInfo();
         return {
             ...data,
+            share : {
+                maxHP : this.maxHP,
+                curHP : this.curHP
+            }
             share : {
                 maxHP : this.maxHP,
                 curHP : this.curHP
@@ -99,12 +106,37 @@ class ShareAttributeEvent extends GameEvent {
         super.Process(json);
         this.TakeDamage(json.damage);
     }
+        //console.log(this.timeToEnd);
+        this.timeToEnd -= TICK_RATE;
+        if(this.timeToEnd < 0)
+        {
+            this.end = true;
+            this.endState = true;
+        }
+    }
+
+    TakeDamage(damage : number) : void {
+        this.curHP -= damage;
+        if(this.curHP > this.maxHP) this.curHP = this.maxHP;
+        else if(this.curHP <= 0)
+        {
+            this.end = true;
+            this.endState = false;
+        }
+        //console.log(this.curHP);
+    }
+
+    Process(json: any): void {
+        super.Process(json);
+        this.TakeDamage(json.damage);
+    }
 }
 
 class OnePermaDeathEvent extends GameEvent {
     constructor()
     {
         super();
+        this.id = 3;
         this.id = 3;
     }
 
@@ -122,29 +154,106 @@ class OnePermaDeathEvent extends GameEvent {
 }
 
 class QuickTimeEvent extends GameEvent {
-    constructor()
-    {
+    goal : number = 0 ;
+    startingScore:  number = 0;
+    events: string[] = [];
+    currentEvent: string;
+    constructor() {
         super();
         this.id = 4;
+        this.events = ["Kill Enemies", "Gain EXP", "No Get Hit", "No PowerUp"]
+        this.currentEvent = this.events[Math.floor(Math.random() * this.events.length)];
+        this.timeToEnd = 3;
+        switch (this.currentEvent) {
+            case "Kill Enemies":
+                this.goal = GetRandom(25, 45);
+                this.startingScore = 0;
+                break;
+            case "Gain EXP":
+                this.goal = GetRandom(200, 500);
+                this.startingScore = 0;
+                break;
+            case "No Get Hit":
+                this.goal = GetRandom(3, 7);
+                this.startingScore = 0;
+                break;
+            case "No PowerUp":
+                this.goal = GetRandom(3, 7);
+                this.startingScore = 0;
+                break;
+            default:
+                break;
+        }
     }
 
     GetInfo(): any {
         let data : any = super.GetInfo();
         return {
             ...data,
-        }
+            quick: {
+                currentEvent : this.currentEvent,
+                goal: this.goal,
+                startingScore: this.startingScore
+            }
+        };
     }
 
     Tick(): void {
         super.Tick();
+        this.timeToEnd -= TICK_RATE;
+        if(this.timeToEnd < 0) {
+            this.end = true;
+            this.endState = true;
+        }
     }
-
+    Process(json: any): void {
+        super.Process(json);
+        //TODO: @Tung
+        console.log("yepScore: ", this.startingScore);
+        switch (this.currentEvent) {
+            case "Kill Enemies":
+                this.startingScore += json.enemyKill;
+                if (this.startingScore >= this.goal) {
+                    this.end = true;
+                    this.endState = true;
+                }
+                break;
+            case "Gain EXP":
+                this.startingScore += json.expGained;
+                if (this.startingScore >= this.goal) {
+                    this.end = true;
+                    this.endState = true;
+                }
+                break;
+            case "No Get Hit":
+                if (json.getHit) {
+                    this.startingScore++;
+                } else if (this.startingScore >= this.goal) {
+                    this.end = true;
+                    this.endState = true;
+                }
+                break;
+            case "No PowerUp":
+                if (json.powerUpTaken) {
+                    
+                } 
+                if (this.startingScore >= this.goal) {
+                    this.end = true;
+                    this.endState = true;
+                }
+                break;
+            default:
+                break;
+            
+        }
+    }
 }
 
 class RaidBossEvent extends GameEvent {
     constructor()
     {
         super();
+        this.id = 5;
         this.id = 5;
     }
 
@@ -169,6 +278,7 @@ class RaidBossEvent extends GameEvent {
 class EventManager
 {
     currentEvents : Map<number, GameEvent>;
+    currentEvents : Map<number, GameEvent>;
     timeToNextEvent : number;
     game : Game;
     eventList : any = {
@@ -182,7 +292,7 @@ class EventManager
     constructor(game : Game)
     {
         this.currentEvents = new Map<number, GameEvent>();
-        this.timeToNextEvent = 5;
+        this.timeToNextEvent = 2;
         this.game = game;
     }
 
@@ -201,10 +311,10 @@ class EventManager
         {
             //random event: 
             //let r : number = Math.floor(Math.random() * Object.keys(this.eventList).length);
-            let r = 2;
+            let r = 4;
             let ev = new this.eventList[r](this.game.players);
             this.currentEvents.set(r, ev);
-            this.timeToNextEvent = Math.floor(Math.random() * 20) + 100;
+            this.timeToNextEvent = Math.floor(Math.random() * 2) + 1;
         }
     }
 
