@@ -21,6 +21,7 @@ class Game {
     isLevelUp : boolean = false;
     levelUpCount : number = 0;
     eventManager : EventManager;
+    totalEnemyKilled : number = 0;
     constructor(players : Map<string, Player>, room : Room)
     {
         this.eventManager = new EventManager(this);
@@ -197,7 +198,7 @@ class Game {
             
             case 'level up':
                 this.levelUpCount++;
-                if(this.levelUpCount == this.players.size)
+                if(this.levelUpCount >= this.players.size)
                 {
                     this.isLevelUp = true;
                     this.isPause = true;
@@ -208,7 +209,7 @@ class Game {
             case 'choose level up':
                 //console.log(this.levelUpCount);
                 this.levelUpCount--;
-                if(this.levelUpCount == 0) 
+                if(this.levelUpCount <= 0) 
                 {
                     this.isLevelUp = false;
                     this.isPause = false;
@@ -319,6 +320,11 @@ class Game {
         }
         res.sort((a : any, b : any) => a.enemy_kill - b.enemy_kill);
         return res;
+    }
+
+    UpdateEnemyKilled()
+    {
+        this.totalEnemyKilled++;
     }
 }
 

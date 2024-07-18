@@ -120,6 +120,7 @@ class Creep{
         if (roomInfoForSpawnCreep.creeps_manage[shared_id] == false) return;
 
         const game_state = rooms.get(room_id)?.game?.gameState;
+        rooms.get(room_id)?.game?.UpdateEnemyKilled();
 
         if (!game_state.creep_destroy_infos) {
             game_state.creep_destroy_infos = [];

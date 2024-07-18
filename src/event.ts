@@ -58,7 +58,7 @@ class ShareAttributeEvent extends GameEvent {
         }
         this.maxHP /= players.size;
         this.curHP = this.maxHP;
-        this.timeToEnd = 30;
+        this.timeToEnd = 100;
   
     }
 
@@ -171,6 +171,7 @@ class EventManager
     currentEvents : Map<number, GameEvent>;
     timeToNextEvent : number;
     game : Game;
+    pendingEvent : number[];
     eventList : any = {
         0 : ChainEvent,
         2 : ShareAttributeEvent,
@@ -184,6 +185,7 @@ class EventManager
         this.currentEvents = new Map<number, GameEvent>();
         this.timeToNextEvent = 5;
         this.game = game;
+        this.pendingEvent = [0, 2, 3, 4, 5];
     }
 
     Tick()
@@ -200,7 +202,8 @@ class EventManager
         else 
         {
             //random event: 
-            //let r : number = Math.floor(Math.random() * Object.keys(this.eventList).length);
+            //let r : number = Math.floor(Math.random() * pendingEvent.length);
+            //this.pendingEvent.splice(this.pendingEvent.indexOf(r), 1);
             let r = 2;
             let ev = new this.eventList[r](this.game.players);
             this.currentEvents.set(r, ev);
