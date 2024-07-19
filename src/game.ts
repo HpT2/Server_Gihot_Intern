@@ -81,7 +81,7 @@ class Game {
             }
         }
         if(this.isPause) return;
-        console.log(this.levelUpCount);
+        //console.log(this.levelUpCount);
         let numDead : number = 0;
         this.players.forEach((player, _) => {
             if(this.current_tick - player.last_tick > 10)

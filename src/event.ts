@@ -1,6 +1,5 @@
 import Game from "./game";
 import { TICK_RATE } from "../start_server2";
-import Player from "./player";
 import { GetRandom } from "./function";
 
 class GameEvent
@@ -60,7 +59,7 @@ class ShareAttributeEvent extends GameEvent {
         }
         this.maxHP /= players.size;
         this.curHP = this.maxHP;
-        this.timeToEnd = 100;
+        this.timeToEnd = 10;
   
     }
 
@@ -231,7 +230,7 @@ class EventManager
     pendingEvent : number[];
     eventList : any = {
         0 : ChainEvent,
-        1 : null,
+        //1 : null,
         2 : ShareAttributeEvent,
         3 : OnePermaDeathEvent,
         4 : QuickTimeKillEnemyEvent,
@@ -244,7 +243,7 @@ class EventManager
         this.currentEvents = new Map<number, GameEvent>();
         this.timeToNextEvent = 2;
         this.game = game;
-        this.pendingEvent = [0, 2, 3, 4, 5];
+        this.pendingEvent = [2, 4];
     }
 
     Tick()
@@ -257,16 +256,20 @@ class EventManager
             })
         }
 
+        if(this.pendingEvent.length == 0) return;
+
         if(this.timeToNextEvent > 0) this.timeToNextEvent -= TICK_RATE;
         else 
         {
             //random event: 
-            //let r : number = Math.floor(Math.random() * pendingEvent.length);
-            //this.pendingEvent.splice(this.pendingEvent.indexOf(r), 1);
-            let r = 4;
-            let ev = new this.eventList[r](this.game);
-            this.currentEvents.set(r, ev);
-            this.timeToNextEvent = Math.floor(Math.random() * 100) + 100;
+            let r : number = Math.floor(Math.random() * this.pendingEvent.length);
+            let index = this.pendingEvent[r];
+            this.pendingEvent.splice(r, 1);
+            //let r = 4;
+            console.log(index, this.eventList[index], r);
+            let ev = new this.eventList[index](this.game);
+            this.currentEvents.set(index, ev);
+            this.timeToNextEvent = Math.floor(Math.random() * 0) + 5;
         }
     }
 
@@ -281,7 +284,11 @@ class EventManager
             this.game.gameState.game_event.event_info.push(event.GetInfo());
             if(event.end) 
             {
-                this.currentEvents.delete(event.id);
+                //console.log(typeof(event));
+                let eventKey : any = Number(Object.keys(this.eventList).find(key => event instanceof this.eventList[key]));
+                this.currentEvents.delete(eventKey);
+                this.pendingEvent.push(eventKey);
+                //console.log(eventKey);
             }
         })
     }
