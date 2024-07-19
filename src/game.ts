@@ -223,7 +223,7 @@ class Game {
                 break;
 
             case "creep destroy":
-                Creep.getInstance().DestroyCreep(json._event.shared_id, json._event.power_up_spawn_info, this.room.id);
+                Creep.getInstance().DestroyCreep(json._event.shared_id, json._event.power_up_spawn_info, this.room.id, this);
                 
                 let sc : any = this.score.get(json.player_id);
                 this.score.set(json.player_id, sc + 1);
