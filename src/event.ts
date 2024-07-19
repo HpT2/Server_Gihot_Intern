@@ -126,20 +126,13 @@ class OnePermaDeathEvent extends GameEvent {
 class QuickTimeEvent extends GameEvent {
     goal : number = 0 ;
     currentScore:  number = 0;
-    constructor()
+    game : Game;
+
+    constructor( game : Game)
     {
         super();
-        this.id = 4;
-    }
-}
-
-class QuickTimeKillEnemyEvent extends QuickTimeEvent {
-    game : Game;
-    constructor(game : Game) {
-        super();
         this.game = game;
-        this.timeToEnd = 100;
-        this.goal = game.totalEnemyKilled + GetRandom(30, 100);
+        this.id = 4;
     }
 
     GetInfo(): any {
@@ -148,13 +141,24 @@ class QuickTimeKillEnemyEvent extends QuickTimeEvent {
             ...data,
             quick : {
                 goal : this.goal,
-                currentScore : this.game.totalEnemyKilled
+                currentScore : this.currentScore
             }
         };
+    }
+}
+
+class QuickTimeKillEnemyEvent extends QuickTimeEvent {
+    constructor(game : Game) {
+        super(game);
+        this.timeToEnd = 100;
+        this.goal = game.totalEnemyKilled + GetRandom(30, 100);
     }
 
     Tick(): void {
         super.Tick();
+        
+        this.currentScore = this.game.totalEnemyKilled;
+
         if(this.game.totalEnemyKilled >= this.goal)
         {
             this.end = true;
@@ -164,10 +168,6 @@ class QuickTimeKillEnemyEvent extends QuickTimeEvent {
             this.end = true;
             this.endState = false;
         }
-    }
-
-    Process(json: any): void {
-        super.Process(json);
     }
 }
 
