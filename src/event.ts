@@ -31,6 +31,7 @@ class ChainEvent extends GameEvent{
     {
         super();
         this.id = 0;
+        this.timeToEnd = 100;
     }
 
     GetInfo(): any {
@@ -42,6 +43,9 @@ class ChainEvent extends GameEvent{
 
     Tick(): void {
         super.Tick();
+        if(this.timeToEnd < 0) {
+            this.end = true;
+        }
     }
 
 }
