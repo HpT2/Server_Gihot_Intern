@@ -133,6 +133,7 @@ class QuickTimeEvent extends GameEvent {
         super();
         this.game = game;
         this.id = 4;
+        this.timeToEnd = 30;
     }
 
     GetInfo(): any {
@@ -145,13 +146,13 @@ class QuickTimeEvent extends GameEvent {
             }
         };
     }
+
 }
 
 class QuickTimeKillEnemyEvent extends QuickTimeEvent {
     constructor(game : Game) {
         super(game);
-        this.timeToEnd = 100;
-        this.goal = game.totalEnemyKilled + GetRandom(30, 100);
+        this.goal = game.totalEnemyKilled + GetRandom(20, 30);
     }
 
     Tick(): void {
@@ -164,7 +165,32 @@ class QuickTimeKillEnemyEvent extends QuickTimeEvent {
             this.end = true;
             this.endState = true;
         }
-        else if(this.timeToEnd < 0) {
+        else if(this.timeToEnd < 0) 
+        {
+            this.end = true;
+            this.endState = false;
+        }
+    }
+}
+
+class QuickTimePowerUpPickUpEvent extends QuickTimeEvent {
+    constructor(game : Game) {
+        super(game);
+        this.goal = game.totalPowerUpPicked + GetRandom(1, 3);
+    }
+
+    Tick(): void {
+        super.Tick();
+        
+        this.currentScore = this.game.totalPowerUpPicked;
+
+        if( this.timeToEnd < 0 && this.game.totalPowerUpPicked < this.goal)
+        {
+            this.end = true;
+            this.endState = true;
+        }
+        else
+        {
             this.end = true;
             this.endState = false;
         }
@@ -209,7 +235,8 @@ class EventManager
         2 : ShareAttributeEvent,
         3 : OnePermaDeathEvent,
         4 : QuickTimeKillEnemyEvent,
-        5 : RaidBossEvent
+        5 : QuickTimePowerUpPickUpEvent,
+        6 : RaidBossEvent
     };
 
     constructor(game : Game)

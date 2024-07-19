@@ -22,6 +22,7 @@ class Game {
     levelUpCount : number = 0;
     eventManager : EventManager;
     totalEnemyKilled : number = 0;
+    totalPowerUpPicked : number = 0;
     constructor(players : Map<string, Player>, room : Room)
     {
         this.eventManager = new EventManager(this);
@@ -80,6 +81,7 @@ class Game {
             }
         }
         if(this.isPause) return;
+        console.log(this.levelUpCount);
         let numDead : number = 0;
         this.players.forEach((player, _) => {
             if(this.current_tick - player.last_tick > 10)
@@ -231,7 +233,7 @@ class Game {
                 break;
 
             case "power up pick":
-                PowerUp.getInstance().PlayerPickUpPowerUp(json._event.shared_id, json._event.player_id, this.room.id);
+                PowerUp.getInstance().PlayerPickUpPowerUp(json._event.shared_id, json._event.player_id, this.room.id, this);
                 break;
 
             case 'pause':
@@ -325,6 +327,10 @@ class Game {
     UpdateEnemyKilled()
     {
         this.totalEnemyKilled++;
+    }
+    UpdatePowerUpPicked()
+    {
+        this.totalPowerUpPicked++;
     }
 }
 

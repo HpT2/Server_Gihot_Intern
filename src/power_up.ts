@@ -1,4 +1,5 @@
 import rooms from "../start_server2";
+import Game from "./game";
 
 class PowerUp{
     static Power_Up_Time_To_Live: number = 15000;
@@ -44,7 +45,7 @@ class PowerUp{
         };
     }
 
-    public PlayerPickUpPowerUp(shared_id: number, player_id: string, room_id: string) {
+    public PlayerPickUpPowerUp(shared_id: number, player_id: string, room_id: string, game: Game) {
         const room_info_for_manage_power_up = this.room_infos_for_manage_power_up.get(room_id);
         if (room_info_for_manage_power_up == undefined) return;
 
@@ -61,6 +62,7 @@ class PowerUp{
             player_id: player_id,
             shared_id: shared_id
         });
+        game.UpdatePowerUpPicked();
     }
 }
 
