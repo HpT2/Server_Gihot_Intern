@@ -11,6 +11,8 @@ class Room {
     name : string;
     game_mode : string;
     pause : boolean = false;
+    eventHandler : any;
+
     constructor(player : Player, name :string, game_mode : string)
     {
         this.id = player.id;
@@ -20,9 +22,18 @@ class Room {
         this.game = null;
         this.name = name;
         this.game_mode = game_mode;
-        //this.server = ;
         this.Add(player);
-        //this.server.on("message", this.Listener);
+
+        this.eventHandler = {
+            'start'         : this.HandleStart.bind(this),
+            'ready'         : this.HandleReady.bind(this),
+            'kick_player'   : this.HandleKick.bind(this),
+            'leave'         : this.HandleLeave.bind(this),
+            'choosegun'     : this.HandleChooseGun.bind(this),
+            'quit'          : this.HandleQuit.bind(this),
+            'other'         : this.HandleOther.bind(this)
+        }
+
     }
 
     Add(player : Player) : boolean
@@ -35,75 +46,11 @@ class Room {
 
     RoomListener(worker : any, rooms : Map<string, Room>, json : any) : void {
         
-        switch(json._event.event_name)
-        {
-            case 'start': 
-                this.StartGame(worker);
-                break;
-            case 'ready':
-                this.readied_players.set(json.player_id, !this.readied_players.get(json.player_id));
-                // console.log(this.readied_players.get(json.player_id));
-                for(const [key, value] of this.readied_players)
-                {
-                    if(value == false){
-                        let dt : any = {
-                            event_name : "not all player ready"
-                        }
-                        let host_player : Player | undefined = this.players.get(this.id);
-                        worker.postMessage({socketId : host_player?.sessionId, data : dt});
-                        return;
-                    }
-                }
+        let handler = this.eventHandler[json._event.event_name];
 
-                let dt : any = {
-                    event_name : "all player ready"
-                }
+        if(handler) handler(worker, json, rooms);
+        else this.eventHandler['other'](worker, json);
 
-                let host_player : Player | undefined = this.players.get(this.id);
-                worker.postMessage({socketId : host_player?.sessionId, data : dt});
-                break;
-            case 'kick_player':
-                let kickedplayer:Player | undefined =this.players.get(json._event.player_id);
-                
-                this.RemovePlayer(json._event.player_id);
-                
-                let dataKicked = {
-                    event_name : 'kicked',
-                }
-
-                if(kickedplayer) 
-                {
-                    kickedplayer.in_room = false;
-                    worker.postMessage({socketId : kickedplayer.sessionId, data : dataKicked});
-                }
-
-                let dataKick={
-                    event_name : 'kick',
-                    player_id : json._event.player_id,
-                    host_id: json._event.host_id
-                }
-                for(const [key, player] of this.players)
-                {
-                    worker.postMessage({socketId : player.sessionId, data : dataKick});
-                }
-                // console.log(data1);
-                break;
-            case 'leave':
-                let pl : Player | undefined = this.players.get(json._event.player_id);
-                if(pl) pl.in_room = false;
-                this.PlayerOutRoom(worker, json.player_id);
-                break;
-            case 'choosegun':
-                let _pl : Player | undefined =this.players.get(json.player_id);
-                if(_pl) _pl.gun_id = json._event.gun_id;
-                break;
-            case 'quit':
-                this.PlayerQuit(json.player_id, worker, rooms);
-                break;
-            default:
-                this.game?.GameListener(worker, json);
-                break;
-        }
     }
 
     PlayerQuit(id : string, worker : any, rooms : Map<string, Room>)
@@ -169,6 +116,7 @@ class Room {
 
     StartGame(worker : any)
     {
+        
         //init game state
         this.game = new Game(this.players, this);
         let dataStart : any = {
@@ -198,6 +146,85 @@ class Room {
             this.game = null;
             RemoveRoom(this.id);
         }
+    }
+
+    HandleStart(worker : any, json : any)
+    {
+        this.StartGame(worker);
+    }
+
+    HandleReady( worker : any, json : any)
+    {
+        this.readied_players.set(json.player_id, !this.readied_players.get(json.player_id));
+        // console.log(this.readied_players.get(json.player_id));
+        for(const [key, value] of this.readied_players)
+        {
+            if(value == false){
+                let dt : any = {
+                    event_name : "not all player ready"
+                }
+                let host_player : Player | undefined = this.players.get(this.id);
+                worker.postMessage({socketId : host_player?.sessionId, data : dt});
+                return;
+            }
+        }
+
+        let dt : any = {
+            event_name : "all player ready"
+        }
+
+        let host_player : Player | undefined = this.players.get(this.id);
+        worker.postMessage({socketId : host_player?.sessionId, data : dt});
+    }
+
+    HandleKick(worker : any, json : any)
+    {
+        let kickedplayer:Player | undefined =this.players.get(json._event.player_id);
+                
+        this.RemovePlayer(json._event.player_id);
+        
+        let dataKicked = {
+            event_name : 'kicked',
+        }
+
+        if(kickedplayer) 
+        {
+            kickedplayer.in_room = false;
+            worker.postMessage({socketId : kickedplayer.sessionId, data : dataKicked});
+        }
+
+        let dataKick={
+            event_name : 'kick',
+            player_id : json._event.player_id,
+            host_id: json._event.host_id
+        }
+        for(const [key, player] of this.players)
+        {
+            worker.postMessage({socketId : player.sessionId, data : dataKick});
+        }
+    }
+
+    HandleLeave(worker : any, json : any)
+    {
+        let pl : any = this.players.get(json._event.player_id);
+        pl.in_room = false;
+        this.PlayerOutRoom(worker, json.player_id);
+    }
+
+    HandleChooseGun(worker : any, json : any)
+    {
+        let _pl : any =this.players.get(json.player_id);
+        _pl.gun_id = json._event.gun_id;
+    }
+
+    HandleQuit(worker : any, json : any, rooms : any)
+    {
+        this.PlayerQuit(json.player_id, worker, rooms);
+    }
+
+    HandleOther(worker : any, json : any)
+    {
+        this.game?.GameListener(worker, json);
     }
 }
 

@@ -23,6 +23,8 @@ class Game {
     eventManager : EventManager;
     totalEnemyKilled : number = 0;
     totalPowerUpPicked : number = 0;
+    eventHandler : any;
+
     constructor(players : Map<string, Player>, room : Room)
     {
         this.eventManager = new EventManager(this);
@@ -43,18 +45,30 @@ class Game {
             i++; 
         }   
         this.fixedUpdate = null;
+
+        this.eventHandler = {
+            'done loading'      : this.HandleDoneLoading.bind(this),
+            "spawn done"        : this.HandleSpawnDone.bind(this),
+            'player state'      : this.HandlePlayerState.bind(this),
+            'level up'          : this.HandleLevelUp.bind(this),
+            'choose level up'   : this.HandleChooseLevelUp.bind(this),
+            'player out'        : this.HandlePlayerOut.bind(this),
+            'creep destroy'     : this.HandleCreepDestroy.bind(this),
+            'power up pick'     : this.HandlePowerUpPick.bind(this),
+            'resume'            : this.HandleResume.bind(this),
+            'pause'             : this.HandlePause.bind(this),
+            'revive'            : this.HandleRevive.bind(this),
+            'game event'        : this.HandleGameEvent.bind(this),
+            'game end'          : this.HandleGameEnd.bind(this),
+        }
+
+
+
+
     }
 
     Run(worker : any) : void {
-        // for(let i = 0; i < this.players.length; i++)
-        // {
-        //     this.players[i].socket.on("data", (data : any) => {
-        //         console.log(data);
-        //     });
-        // } 
-        //setInterval(() => this.PredictPlayerPosition(), 1000 / 80);
-        //setInterval(() => this.EmitPlayersState(worker), 1000 / 10); 
-        //this.FixedUpdate(worker);
+
         this.room.pause = false;
         this.fixedUpdate = setInterval(() => this.FixedUpdate(worker), TICK_RATE * 1000);
 
@@ -81,7 +95,6 @@ class Game {
             }
         }
         if(this.isPause) return;
-        //console.log(this.levelUpCount);
         let numDead : number = 0;
         this.players.forEach((player, _) => {
             if(this.current_tick - player.last_tick > 10)
@@ -167,107 +180,7 @@ class Game {
     }
  
     GameListener(worker : any, json : any) : void {
-        //console.log(json);
-        //console.log(`Received from client (${rInfo.address}:${rInfo.port}): ${receivedData}`);
-        switch(json._event.event_name)
-        {
-            case 'done loading':
-                this.client_side_loading++;
-                if(this.client_side_loading == this.players.size) 
-                {
-                    let dataDoneLoad : any = { 
-                        event_name : "spawn player",
-                        data : this.playerSpawnPos
-                    }
-                    this.EmitToAllPlayer(worker, dataDoneLoad);
-                }
-                break;
-            case "spawn done":
-
-                this.doneSpawning++;
-                if(this.doneSpawning == this.players.size) this.Run(worker); 
-
-                break;
-            case 'player state': 
-                let playerState = this.players.get(json.player_id);
-                if(playerState && !playerState.isDead){
-                    playerState.SetState(json);   
-                           
-                    playerState.last_tick = this.current_tick;
-                }
-                //console.log(json.player_id, json._event.isDead);
-                break;
-            
-            case 'level up':
-                this.levelUpCount++;
-                if(this.levelUpCount >= this.players.size)
-                {
-                    this.isLevelUp = true;
-                    this.isPause = true;
-                    Creep.getInstance().OnGameEnd(this.room.id);
-                }
-                break;
-
-            case 'choose level up':
-                //console.log(this.levelUpCount);
-                this.levelUpCount--;
-                if(this.levelUpCount <= 0) 
-                {
-                    this.isLevelUp = false;
-                    this.isPause = false;
-                    Creep.getInstance().StartSpawnProcess(this.room.id);
-                }
-                break;
-
-            case "player out":
-                this.PlayerOut(json.player_id, worker);
-                if(this.players.size == 0) this.Done(1, worker);
-                break;
-
-            case "creep destroy":
-                Creep.getInstance().DestroyCreep(json._event.shared_id, json._event.power_up_spawn_info, this.room.id, this);
-                
-                let sc : any = this.score.get(json.player_id);
-                this.score.set(json.player_id, sc + 1);
-
-                break;
-
-            case "power up pick":
-                PowerUp.getInstance().PlayerPickUpPowerUp(json._event.shared_id, json._event.player_id, this.room.id, this);
-                break;
-
-            case 'pause':
-                // if(json.player_id != this.room.id) break;
-                this.isPause = true;
-                Creep.getInstance().OnGameEnd(this.room.id);
-                break;
-
-            case 'resume':
-                if(!this.resumeFromPause)
-                {
-                    this.resumeFromPause = true;
-                    this.resumeTime = 3;
-                }
-                break;
-            
-            case 'revive':
-
-                let revivePlayer = this.players.get(json._event.revive_player_id);
-                if(revivePlayer) {
-                    
-                    revivePlayer.isDead = false;
-                    revivePlayer.isImmutable = 1;
-                    //console.log(revivePlayer.isDead);
-                }
-               
-                break;
-            case "game event":
-                this.eventManager.ProcessEvent(json._event);
-                break;
-            case "game end":
-                this.Done(0, worker);
-                break;
-        }  
+        this.eventHandler[json._event.event_name](worker, json);
     }
 
     PlayerOut(id : string, worker : any)
@@ -328,9 +241,117 @@ class Game {
     {
         this.totalEnemyKilled++;
     }
+    
     UpdatePowerUpPicked()
     {
         this.totalPowerUpPicked++;
+    }
+
+    HandleDoneLoading(worker : any, json : any)
+    {
+        this.client_side_loading++;
+        if(this.client_side_loading == this.players.size) 
+        {
+            let dataDoneLoad : any = { 
+                event_name : "spawn player",
+                data : this.playerSpawnPos
+            }
+            this.EmitToAllPlayer(worker, dataDoneLoad);
+        }
+    }   
+    
+    HandleSpawnDone(worker : any, json : any)
+    {
+        this.doneSpawning++;
+        if(this.doneSpawning == this.players.size) this.Run(worker); 
+    }
+
+    HandlePlayerState(worker : any, json : any)
+    {
+        let playerState = this.players.get(json.player_id);
+        if(playerState && !playerState.isDead){
+            playerState.SetState(json);   
+                   
+            playerState.last_tick = this.current_tick;
+        }
+    }
+
+    HandleLevelUp(worker : any, json : any)
+    {
+        this.levelUpCount++;
+        if(this.levelUpCount >= this.players.size)
+        {
+            this.isLevelUp = true;
+            this.isPause = true;
+            Creep.getInstance().OnGameEnd(this.room.id);
+        }
+    }
+
+    HandleChooseLevelUp(worker : any, json : any)
+    {
+        this.levelUpCount--;
+        if(this.levelUpCount == 0) 
+        {
+            this.isLevelUp = false;
+            this.isPause = false;
+            Creep.getInstance().StartSpawnProcess(this.room.id);
+        }
+    }
+
+    HandlePlayerOut(worker : any, json : any)
+    {
+        this.PlayerOut(json.player_id, worker);
+        if(this.players.size == 0) this.Done(1, worker);
+    }
+
+    HandleCreepDestroy(worker : any, json : any)
+    {
+        Creep.getInstance().DestroyCreep(json._event.shared_id, json._event.power_up_spawn_info, this.room.id, this);
+                
+        let sc : any = this.score.get(json.player_id);
+        this.score.set(json.player_id, sc + 1);
+
+    }
+
+    HandlePowerUpPick(worker : any, json : any)
+    {
+        PowerUp.getInstance().PlayerPickUpPowerUp(json._event.shared_id, json._event.player_id, this.room.id, this);
+    }
+
+    HandleResume(worker : any, json : any)
+    {
+        if(!this.resumeFromPause)
+        {
+            this.resumeFromPause = true;
+            this.resumeTime = 3;
+        }
+    }   
+
+    HandlePause(worker : any, json : any)
+    {
+        this.isPause = true;
+        Creep.getInstance().OnGameEnd(this.room.id);
+    }
+
+    HandleRevive(worker : any, json : any)
+    {
+        let revivePlayer = this.players.get(json._event.revive_player_id);
+        if(revivePlayer) {
+            
+            revivePlayer.isDead = false;
+            revivePlayer.isImmutable = 1;
+            //console.log(revivePlayer.isDead);
+        }
+    }
+
+    HandleGameEvent(worker : any, json : any)
+    {
+        this.eventManager.ProcessEvent(json._event);
+    }
+
+    HandleGameEnd(worker : any, json : any)
+    {
+        this.Done(0, worker);
     }
 }
 
