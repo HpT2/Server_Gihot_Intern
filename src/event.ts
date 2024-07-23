@@ -205,7 +205,7 @@ class RaidBossEvent extends GameEvent {
     {
         super();
         this.id = 5;
-        this.id = 5;
+        this.timeToEnd = GetRandom(20, 40);
     }
 
     GetInfo(): any {
@@ -221,6 +221,57 @@ class RaidBossEvent extends GameEvent {
     
 }
 
+
+class MoveToTargetEvent extends GameEvent
+{
+    targetPos : any = [];
+    atTarget1 : number = 0;
+    atTarget2 : number = 0;
+    constructor()
+    {
+        super();
+        this.id = 6;
+        this.timeToEnd = GetRandom(20, 40);
+        this.targetPos.push({x: 10, y :0, z : 10});
+        this.targetPos.push({x: 10, y :0, z : 20});
+    }
+
+    GetInfo(): any {
+        let data : any = super.GetInfo();
+        return {
+            ...data,
+            goToPos : {
+                target1 : this.targetPos[0],
+                target2 : this.targetPos[1]
+            }
+        }
+    }
+
+    Tick(): void {
+        super.Tick();
+        if(this.timeToEnd < 0 && !this.end)
+        {
+            this.end = true;
+            this.endState = false;
+        }
+        //console.log(this.timeToEnd, this.end);
+    }
+
+    Process(json: any): void {
+        this.atTarget1 += json.target1;
+        this.atTarget2 += json.target2;
+
+        if(this.atTarget1 < 0) this.atTarget1 = 0;
+        if(this.atTarget2 < 0) this.atTarget2 = 0;
+
+        if(this.atTarget1 > 0 && this.atTarget2 > 0)
+        {
+            this.end = true;
+            this.endState = true;
+        }
+        console.log(this.atTarget1, this.atTarget2);
+    }
+}
 //others
 
 
@@ -237,9 +288,10 @@ class EventManager
         //1 : null,
         2 : ShareAttributeEvent,
         3 : OnePermaDeathEvent,
-        4 : QuickTimeKillEnemyEvent,
-        5 : QuickTimePowerUpPickUpEvent,
-        6 : RaidBossEvent
+        4 : [QuickTimeKillEnemyEvent, QuickTimePowerUpPickUpEvent],
+        5 : RaidBossEvent,
+        6 : MoveToTargetEvent
+        
     };
 
     constructor(game : Game)
@@ -247,7 +299,7 @@ class EventManager
         this.currentEvents = new Map<number, GameEvent>();
         this.timeToNextEvent = 2;
         this.game = game;
-        this.pendingEvent = [2, 4];
+        this.pendingEvent = [0, 2, 4, 6];
     }
 
     Tick()
@@ -266,13 +318,16 @@ class EventManager
         else 
         {
             //random event: 
-            let r : number = Math.floor(Math.random() * this.pendingEvent.length);
+            //console.log(this.pendingEvent);
+            let r : number = GetRandom(0, this.pendingEvent.length - 1);
             let index = this.pendingEvent[r];
             this.pendingEvent.splice(r, 1);
             //let r = 4;
             console.log(index, this.eventList[index], r);
-            let ev = new this.eventList[index](this.game);
-            this.currentEvents.set(index, ev);
+            let ev : any | null = null;
+            if(index == 4) ev = new this.eventList[4][GetRandom(0, this.eventList[4].length - 1)](this.game);
+            else ev = new this.eventList[index](this.game);
+            this.currentEvents.set(ev.id, ev);
             this.timeToNextEvent = Math.floor(Math.random() * 0) + 5;
         }
     }
@@ -289,9 +344,8 @@ class EventManager
             if(event.end) 
             {
                 //console.log(typeof(event));
-                let eventKey : any = Number(Object.keys(this.eventList).find(key => event instanceof this.eventList[key]));
-                this.currentEvents.delete(eventKey);
-                this.pendingEvent.push(eventKey);
+                this.currentEvents.delete(event.id);
+                this.pendingEvent.push(event.id);
                 //console.log(eventKey);
             }
         })
