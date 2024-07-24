@@ -1,6 +1,6 @@
 import Player from "./player";
 import Game from "./game";
-import { RemoveRoom } from "../start_server2";
+import { RemoveRoom, RemovePlayer } from "../start_server2";
 
 class Room {
     players : Map<string, Player>;
@@ -65,7 +65,11 @@ class Room {
                 if(id == this.id) this.id = Array.from(this.players)[1][1].id;
                 this.game.PlayerOut(id, worker);
             }
-            else this.PlayerOutRoom(worker, id);
+            else {
+                this.PlayerOutRoom(worker, id);
+            }
+            
+            RemovePlayer(id);
         }
         
     }

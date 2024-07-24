@@ -7,6 +7,7 @@ import { TICK_RATE } from "../start_server2";
 class Game {
 
     players : Map<string, Player>;
+    playerLevelUp : Map<string, number>;
     room : Room;
     playerSpawnPos : any[] = [];
     client_side_loading : number = 0;
@@ -19,7 +20,6 @@ class Game {
     gameState : any;
     isPause : boolean = false;
     isLevelUp : boolean = false;
-    levelUpCount : number = 0;
     eventManager : EventManager;
     totalEnemyKilled : number = 0;
     totalPowerUpPicked : number = 0;
@@ -32,9 +32,11 @@ class Game {
         this.room = room;
         let i : number = 0;
         this.score = new Map<string, number>();
+        this.playerLevelUp = new Map<string, number>();
         for(const [key, player] of this.players)
         {
             this.score.set(key, 0);
+            this.playerLevelUp.set(key, 0);
             player.position = {x : 0 + i * 5, y : 0.7, z : 0 + i * 5};
             player.Setup();
             this.playerSpawnPos.push({
@@ -81,6 +83,25 @@ class Game {
 
     Tick(worker : any) 
     {
+        if(this.isLevelUp)
+        {
+            let levelUpFlag = false;
+            for(const [key, levelUp] of this.playerLevelUp)
+            {
+                if(levelUp > 0) 
+                {
+                    levelUpFlag = true;
+                    break;
+                } 
+            }
+            if(!levelUpFlag)
+            {
+                this.isLevelUp = false;
+                this.isPause = false;
+                Creep.getInstance().StartSpawnProcess(this.room.id);
+
+            }
+        }
         if(this.resumeFromPause)
         {
             if(this.resumeTime > 0)
@@ -192,6 +213,7 @@ class Game {
         
         this.EmitToAllPlayer(worker, dataOut);
         this.room.RemovePlayer(id);
+        this.playerLevelUp.delete(id);
     }
 
     EmitToAllPlayer(worker: any, json : any)  
@@ -278,24 +300,17 @@ class Game {
 
     HandleLevelUp(worker : any, json : any)
     {
-        this.levelUpCount++;
-        if(this.levelUpCount >= this.players.size)
-        {
-            this.isLevelUp = true;
-            this.isPause = true;
-            Creep.getInstance().OnGameEnd(this.room.id);
-        }
+        this.playerLevelUp.set(json.player_id, this.playerLevelUp.get(json.player_id)! + 1);
+
+        this.isLevelUp = true;
+        this.isPause = true;
+        Creep.getInstance().OnGameEnd(this.room.id);
+        
     }
 
     HandleChooseLevelUp(worker : any, json : any)
     {
-        this.levelUpCount--;
-        if(this.levelUpCount == 0) 
-        {
-            this.isLevelUp = false;
-            this.isPause = false;
-            Creep.getInstance().StartSpawnProcess(this.room.id);
-        }
+        this.playerLevelUp.set(json.player_id, this.playerLevelUp.get(json.player_id)! -1);
     }
 
     HandlePlayerOut(worker : any, json : any)

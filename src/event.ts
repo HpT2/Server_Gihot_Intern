@@ -324,7 +324,7 @@ class EventManager
             this.pendingEvent.splice(r, 1);
             //let r = 4;
             console.log(index, this.eventList[index], r);
-            let ev : any | null = null;
+            let ev : any = null;
             if(index == 4) ev = new this.eventList[4][GetRandom(0, this.eventList[4].length - 1)](this.game);
             else ev = new this.eventList[index](this.game);
             this.currentEvents.set(ev.id, ev);

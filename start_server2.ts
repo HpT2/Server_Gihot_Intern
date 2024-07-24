@@ -18,13 +18,42 @@ export function RemoveRoom(id: string) {
     rooms.delete(id);
 }
 
+export function RemovePlayer(id: string)
+{
+    onlinePlayers.delete(id);
+}
+
 if (isMainThread) {
 
     const worker = new Worker(__filename);
 
     let bufferStream: Buffer = Buffer.from('');
-    worker.on("message", (data: any) => {
-        bufferStream = Buffer.concat([bufferStream, data]);
+    worker.on("message", (msg: any) => {
+        if(!msg.event)
+        {
+            bufferStream = Buffer.concat([bufferStream, msg.data]);
+        }
+        else if(msg.event == "client disconnect")
+        {
+            //do sth
+            for(const [key, player] of onlinePlayers)
+            {
+                if(player.sessionId == msg.id)
+                {
+                    if(player.in_room)
+                    {
+                        for (let [key, room] of rooms) {
+                            if (room.players.has(player.id)) {
+                                room.PlayerQuit(player.id, worker, rooms);
+                                break;
+                            }
+                        }
+                    }
+                    else RemovePlayer(player.id);
+                    break;
+                }
+            }
+        }
 
     })
 
@@ -186,26 +215,39 @@ if (isMainThread) {
 
 } else {
 
-    let sessions: Map<string, net.Socket> = new Map<string, net.Socket>();
+    interface CustomSocket extends net.Socket
+    {
+        id : string;
+    }
+
+    let sessions: Map<string, net.Socket> = new Map<string, CustomSocket>();
 
     const server = net.createServer((socket: net.Socket) => {
-
-        socket.on("readable", () => {
-            let data: Buffer = socket.read();
-            if(data !== null) parentPort.postMessage(data);
-        });
-
-        socket.on('error', () => { });
-
         let socketId: string = v4();
+        
+        const customSocket = socket as net.Socket & {id : string};
+        customSocket.id = socketId;
 
-        sessions.set(socketId, socket);
+        customSocket.on('error', () => { });
+        
         let sessionInfo = {
             event_name: "provide session id",
             id: socketId
         }
+
+        sessions.set(socketId, customSocket);
+
         socket.write(PrepareData(JSON.stringify(sessionInfo)), () => console.log("provided session id"));
 
+        customSocket.on("readable", () => {
+            let data: Buffer = socket.read();
+            if(data !== null) parentPort.postMessage({data : data, id : customSocket.id});
+        });
+
+        customSocket.on("close", () => {
+            parentPort.postMessage({data : null, id : customSocket.id, event : "client disconnect"});
+            sessions.delete(customSocket.id);
+        });
     });
 
     server.listen(9999, '0.0.0.0', () => {
