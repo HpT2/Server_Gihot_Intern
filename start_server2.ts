@@ -26,16 +26,25 @@ export function RemovePlayer(id: string)
 if (isMainThread) {
 
     const worker = new Worker(__filename);
-
+    let usingBuffer : boolean = false;
     let bufferStream: Buffer = Buffer.from('');
     worker.on("message", (msg: any) => {
+        handleSocketMsg(msg);
+
+    })
+
+    async function handleSocketMsg(msg : any)
+    {
         if(!msg.event)
         {
-            bufferStream = Buffer.concat([bufferStream, msg.data]);
+           await waitForBufferLock();
+           usingBuffer = true;
+           bufferStream = Buffer.concat([bufferStream, msg.data]);
+           usingBuffer = false;
         }
         else if(msg.event == "client disconnect")
         {
-            //do sth
+                //do sth
             for(const [key, player] of onlinePlayers)
             {
                 if(player.sessionId == msg.id)
@@ -54,8 +63,7 @@ if (isMainThread) {
                 }
             }
         }
-
-    })
+    }
 
     function waitForBuffer(size: number) {
         return new Promise(function (resolve, reject) {
@@ -66,6 +74,17 @@ if (isMainThread) {
             }
             checkBuffer();
         });
+    }
+
+    function waitForBufferLock()
+    {
+        return new Promise(function (resolve, reject) {
+            const waitLock = () => {
+                if(!usingBuffer) resolve(0);
+                else setTimeout(waitLock, 0); 
+            }
+            waitLock();
+        })
     }
 
     function checkSum(buffer : Buffer, sum : number) : boolean
@@ -176,6 +195,8 @@ if (isMainThread) {
 
     async function processBuffer() {
         await waitForBuffer(4);
+        await waitForBufferLock();
+        usingBuffer = true;
 
         let length: number = parseInt(bufferStream.subarray(0, maxDataLength).toString("hex"), 16);
         
@@ -186,20 +207,26 @@ if (isMainThread) {
 
         
 
-        if(!checkSum(dataBuffer, sumData)){
+        if(!checkSum(dataBuffer, sumData))
+        {
             console.log("check sum failed with corrupted data: " + data);
             bufferStream = Buffer.from('');
-            return;
         } 
+        else 
+        {
+            bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
 
-        bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
+            let json: any = JSON.parse(data);
+    
+            const handler : any = eventHandler[json._event.event_name];
+            
+            if(handler) handler(json);
+            else eventHandler['other'](json);
+        }
 
-        let json: any = JSON.parse(data);
+       
 
-        const handler : any = eventHandler[json._event.event_name];
-        
-        if(handler) handler(json);
-        else eventHandler['other'](json);
+        usingBuffer = false;
     }
 
     async function Run()

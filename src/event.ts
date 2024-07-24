@@ -269,7 +269,7 @@ class MoveToTargetEvent extends GameEvent
             this.end = true;
             this.endState = true;
         }
-        console.log(this.atTarget1, this.atTarget2);
+        //console.log(this.atTarget1, this.atTarget2);
     }
 }
 //others
@@ -299,7 +299,7 @@ class EventManager
         this.currentEvents = new Map<number, GameEvent>();
         this.timeToNextEvent = 2;
         this.game = game;
-        this.pendingEvent = [0, 2, 4, 6];
+        this.pendingEvent = [ 2, 4, 6];
     }
 
     Tick()
@@ -323,7 +323,7 @@ class EventManager
             let index = this.pendingEvent[r];
             this.pendingEvent.splice(r, 1);
             //let r = 4;
-            console.log(index, this.eventList[index], r);
+            //console.log(index, this.eventList[index], r);
             let ev : any = null;
             if(index == 4) ev = new this.eventList[4][GetRandom(0, this.eventList[4].length - 1)](this.game);
             else ev = new this.eventList[index](this.game);

@@ -68,7 +68,7 @@ class Room {
             else {
                 this.PlayerOutRoom(worker, id);
             }
-            
+
             RemovePlayer(id);
         }
         
@@ -160,7 +160,6 @@ class Room {
     HandleReady( worker : any, json : any)
     {
         this.readied_players.set(json.player_id, !this.readied_players.get(json.player_id));
-        // console.log(this.readied_players.get(json.player_id));
         for(const [key, value] of this.readied_players)
         {
             if(value == false){
