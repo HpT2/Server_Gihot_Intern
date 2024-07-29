@@ -27,8 +27,8 @@ class Game {
 
     constructor(players : Map<string, Player>, room : Room)
     {
-        this.eventManager = new EventManager(this);
         this.players = players; 
+        this.eventManager = new EventManager(this);
         this.room = room;
         let i : number = 0;
         this.score = new Map<string, number>();

@@ -3,7 +3,7 @@ import Room from "./src/room";
 import Player from "./src/player";
 import { v4 } from 'uuid';
 const { Worker, isMainThread, parentPort } = require('worker_threads');
-
+import { Mutex } from 'async-mutex';
 import { GetPlayersInfo, GetRoomsInfo } from "./src/function";
 
 const tick_rate = 1 / 40;
@@ -14,6 +14,8 @@ const maxDataLength: number = 4;
 let onlinePlayers: Map<string, Player> = new Map<string, Player>();
 let rooms: Map<string, Room> = new Map<string, Room>();
 
+const dbConnect = require('./db_connection');
+
 export function RemoveRoom(id: string) {
     rooms.delete(id);
 }
@@ -23,24 +25,67 @@ export function RemovePlayer(id: string)
     onlinePlayers.delete(id);
 }
 
+export async function Update(id : string, field : string[], value: any[])
+{
+    let updateField : any = [];
+    for(let i = 0; i < field.length; i++) 
+    {
+        updateField.push(`${field[i]}=${value[i]}`);
+    }
+    updateField = updateField.join(',');
+    let query = `Update \`characterInfo\` set ${updateField} where id=${id}`;
+    //console.log(query);
+    return new Promise((resolve, reject) => {
+        dbConnect.query(query, (err : any, res : any) => {
+            resolve(res);
+        })
+    })
+}
+
+export async function Select(id? : string, name? : string, field? : string[])
+{
+    let selectField = field ? field?.join(',') : '*';
+    let query = "";
+    query = `select ${selectField} from \`characterInfo\` where id='${id}' or name='${name}'`;
+    return new Promise((resolve, reject) => {
+        dbConnect.query(query, (err : any, res : any) => {
+            //console.log(err, res);
+            resolve(res[0]);
+        })
+    });
+}
+
+export async function Insert(field : string[], value : any[])
+{
+    let fields = field.join(',');
+    let values = value.join(',');
+    let query = `insert into \`characterInfo\` (${fields}) values (${values})`;
+    return new Promise((resolve, reject) => {
+        dbConnect.query(query, (err : any, res : any) => {
+            query = `select * from \`characterInfo\` where id='${field[0]}'`;
+            dbConnect.query(query, (err : any, res : any) => {
+                resolve(res[0]);
+            })
+        });
+    }); 
+}
+
 if (isMainThread) {
 
     const worker = new Worker(__filename);
-    let usingBuffer : boolean = false;
     let bufferStream: Buffer = Buffer.from('');
+    let bufferMutex = new Mutex();
     worker.on("message", (msg: any) => {
         handleSocketMsg(msg);
 
     })
-
     async function handleSocketMsg(msg : any)
     {
         if(!msg.event)
         {
-           await waitForBufferLock();
-           usingBuffer = true;
+           const release = await bufferMutex.acquire();
            bufferStream = Buffer.concat([bufferStream, msg.data]);
-           usingBuffer = false;
+           release();
         }
         else if(msg.event == "client disconnect")
         {
@@ -76,17 +121,6 @@ if (isMainThread) {
         });
     }
 
-    function waitForBufferLock()
-    {
-        return new Promise(function (resolve, reject) {
-            const waitLock = () => {
-                if(!usingBuffer) resolve(0);
-                else setTimeout(waitLock, 0); 
-            }
-            waitLock();
-        })
-    }
-
     function checkSum(buffer : Buffer, sum : number) : boolean
     {
         let checkSum = 0;
@@ -98,19 +132,44 @@ if (isMainThread) {
         return checkSum == sum;
     }
 
-    function HanldeFirstConnect(json : any)
+    async function HanldeFirstConnect(json : any)
     {
-        let playerID: string = v4();
-        let thisPlayer: Player = new Player(playerID, json.sessionId, 1, json._event.name);
-        onlinePlayers.set(playerID, thisPlayer);
+        let d : any;
+        let playerInfo : any =  await Select(undefined ,json._event.name, undefined);
+        if(playerInfo)
+        {
+            d = {
+                event_name: "provide id",
+                id: playerInfo.id,
+                player_name: playerInfo.name,
+                gun_id: 1,
+                info : playerInfo
+            }
 
-        let d = {
+            let thisPlayer: Player = new Player(playerInfo.id, json.sessionId, 1, playerInfo.name);
+            onlinePlayers.set(playerInfo.id, thisPlayer);
+        }
+        else
+        {
+            let playerID: string = v4();
+            let thisPlayer: Player = new Player(playerID, json.sessionId, 1, json._event.name);
+            onlinePlayers.set(playerID, thisPlayer);
+
+            let field = ["id", "name", "coin", "health", "critrate", "damage", "critdmg", "lifesteal", "firerate"];
+            let value = [`"${playerID}"`, `"${json._event.name}"`, 0, 0, 0, 0, 0, 0, 0];
+            let res = await Insert(field, value);       
+
+            d = {
                 event_name: "provide id",
                 id: playerID,
                 player_name: thisPlayer.name,
-                gun_id: thisPlayer.gun_id
+                gun_id: thisPlayer.gun_id,
+                info : res 
             }
 
+            
+        }
+        //console.log(JSON.stringify(d));
         worker.postMessage({ socketId: json.sessionId, data: d });
     }
 
@@ -184,56 +243,123 @@ if (isMainThread) {
         }
     }
 
+    async function HandleUpdateAttr(json : any)
+    {
+         let value : number = 0;
+         let field : any = {
+            "health" : 0,
+            "critrate" : 1,
+            "critdmg" : 2,
+            "damage" : 3,
+            "lifesteal" : 4,
+            "firerate" : 5
+         };
+         switch(json._event.fieldToUpdate)
+         {
+            case "health":
+                value = json._event.health;
+                break;
+            case "coin":
+                value = json._event.coin;
+                break;
+            case "damage":
+                value = json._event.damage;
+                break;
+            case "critdmg":
+                value = json._event.critdmg;
+                break;
+            case "critrate":
+                value = json._event.critrate;
+                break;
+            case "firerate":
+                value = json._event.firerate;
+                break;
+            case "lifesteal":
+                value = json._event.lifesteal;
+                break;
+         }
+         await Update(`'${json.player_id}'`, [json._event.fieldToUpdate, "coin"], [value, json._event.coin]);
+         //console.log(JSON.stringify(res));
+         let data = {
+            event_name : "update perm attr",
+            field : field[json._event.fieldToUpdate],
+            value : value,
+            fieldAsString : json._event.fieldToUpdate
+         }
+
+         worker.postMessage({ socketId: json.sessionId, data: data });
+    }
+
     const eventHandler : any = {
-        'first connect' : HanldeFirstConnect,
-        'create_rooms'  : HandleCreateRoom,
-        'get_rooms'     : HandleGetRooms,
-        'join_room'     : HandleJoinRoom,
-        'ping'          : HandlePing,
-        'other'         : HandleOther
+        'first connect'     : HanldeFirstConnect,
+        'create_rooms'      : HandleCreateRoom,
+        'get_rooms'         : HandleGetRooms,
+        'join_room'         : HandleJoinRoom,
+        'ping'              : HandlePing,
+        'update attribute'  : HandleUpdateAttr,
+        'other'             : HandleOther
     }
 
     async function processBuffer() {
         await waitForBuffer(4);
-        await waitForBufferLock();
-        usingBuffer = true;
 
+        let release = await bufferMutex.acquire();
         let length: number = parseInt(bufferStream.subarray(0, maxDataLength).toString("hex"), 16);
+        //console.log(length);
+        if(length < 1000) 
+        {
+            release();
+            await waitForBuffer(4 + length + 1);
+        }
+        else 
+        {
+            bufferStream = Buffer.from(''); 
+            console.log("length failed: " + length);
+            release();
+            return;
+        }
         
+        release = await bufferMutex.acquire();
+
         let dataBuffer : Buffer = bufferStream.subarray(maxDataLength, maxDataLength + length);
         let data: string = dataBuffer.toString('utf-8');
         let sumBuffer : Buffer = bufferStream.subarray(maxDataLength + length, maxDataLength + length + 1);
         let sumData : number = parseInt(sumBuffer.toString("hex"), 16);
 
-        
+        bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
+        release();
 
         if(!checkSum(dataBuffer, sumData))
         {
             console.log("check sum failed with corrupted data: " + data);
-            bufferStream = Buffer.from('');
+            return;
         } 
-        else 
-        {
-            bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
+        // else 
+        // {
+        //     //bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
+        // }
 
-            let json: any = JSON.parse(data);
+        
+
+        let json: any = JSON.parse(data);
     
-            const handler : any = eventHandler[json._event.event_name];
+        const handler : any = eventHandler[json._event.event_name];
             
-            if(handler) handler(json);
-            else eventHandler['other'](json);
-        }
-
-       
-
-        usingBuffer = false;
+        if(handler) handler(json);
+        else eventHandler['other'](json);
+        
+        
     }
 
     async function Run()
     {
+        //let processCount = 0;
+        
         while(true)
         {
+            //console.log(processCount);
             await processBuffer();
+            //processCount++;
         }
     }
 

@@ -299,7 +299,8 @@ class EventManager
         this.currentEvents = new Map<number, GameEvent>();
         this.timeToNextEvent = 2;
         this.game = game;
-        this.pendingEvent = [ 2, 4, 6];
+        if(game.players.size > 1) this.pendingEvent = [0, 2, 4, 6];
+        else this.pendingEvent = [0, 2, 4];
     }
 
     Tick()

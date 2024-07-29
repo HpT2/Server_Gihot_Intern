@@ -23,7 +23,7 @@ class Room {
         this.name = name;
         this.game_mode = game_mode;
         this.Add(player);
-
+        
         this.eventHandler = {
             'start'         : this.HandleStart.bind(this),
             'ready'         : this.HandleReady.bind(this),
