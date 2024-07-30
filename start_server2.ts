@@ -37,7 +37,7 @@ export async function Update(id : string, field : string[], value: any[])
     //console.log(query);
     return new Promise((resolve, reject) => {
         dbConnect.query(query, (err : any, res : any) => {
-            //console.log(query, err, res);
+            console.log("UPDATE",query, err, res);
             resolve(res);
         })
     })
@@ -50,7 +50,7 @@ export async function Select(id? : string, name? : string, field? : string[])
     query = `select ${selectField} from \`characterInfo\` where id='${id}' or name='${name}'`;
     return new Promise((resolve, reject) => {
         dbConnect.query(query, (err : any, res : any) => {
-            //console.log(err, res);
+            console.log(")))(((",err, res,query);
             resolve(res[0]);
         })
     });
@@ -137,6 +137,7 @@ if (isMainThread) {
     {
         let d : any;
         let playerInfo : any =  await Select(undefined ,json._event.name, undefined);
+        console.log(playerInfo);
         if(playerInfo)
         {
             d = {
@@ -279,7 +280,7 @@ if (isMainThread) {
                 value = json._event.lifesteal;
                 break;
          }
-         await Update(`'${json.player_id}'`, [json._event.fieldToUpdate, "coin"], [value, json._event.coin]);
+         await Update(`${json.player_id}`, [json._event.fieldToUpdate, "coin"], [value, json._event.coin]);
          //console.log(JSON.stringify(res));
          let data = {
             event_name : "update perm attr",

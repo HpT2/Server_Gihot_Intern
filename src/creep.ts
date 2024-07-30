@@ -33,9 +33,9 @@ class Creep{
             new CreepSpawnInfo(20000,3000,7000,3),
             new CreepSpawnInfo(45000,5000,10000,3),
             new CreepSpawnInfo(90000,5000,10000,3),
-            new CreepSpawnInfo(120000,7000,15000,3),
-            new CreepSpawnInfo(160000,15000,25000,1),
-            new CreepSpawnInfo(200000,20000,30000,1)
+            new CreepSpawnInfo(10000,7000,15000,3),
+            new CreepSpawnInfo(10000,15000,25000,1),
+            new CreepSpawnInfo(10000,20000,30000,1)
         ]
 
         this.roomInfosForSpawnCreep = new Map<string, {

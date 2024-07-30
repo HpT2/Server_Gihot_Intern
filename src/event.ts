@@ -31,7 +31,7 @@ class ChainEvent extends GameEvent{
     {
         super();
         this.id = 0;
-        this.timeToEnd = 45;
+        this.timeToEnd = 30;
     }
 
     GetInfo(): any {
@@ -155,7 +155,7 @@ class QuickTimeEvent extends GameEvent {
 class QuickTimeKillEnemyEvent extends QuickTimeEvent {
     constructor(game : Game) {
         super(game);
-        this.goal = game.totalEnemyKilled + GetRandom(20, 30);
+        this.goal = game.totalEnemyKilled + GetRandom(20, 25);
     }
 
     Tick(): void {
@@ -231,7 +231,7 @@ class MoveToTargetEvent extends GameEvent
     {
         super();
         this.id = 6;
-        this.timeToEnd = GetRandom(20, 40);
+        this.timeToEnd = GetRandom(30, 35);
         this.targetPos.push({x: GetRandom(-10, 110), y :0, z :GetRandom(-100, 40)});
         this.targetPos.push({x: GetRandom(-10, 110), y :0, z :GetRandom(-100, 40)});
     }
@@ -288,7 +288,7 @@ class EventManager
         //1 : null,
         2 : ShareAttributeEvent,
         3 : OnePermaDeathEvent,
-        4 : [QuickTimeKillEnemyEvent, QuickTimePowerUpPickUpEvent],
+        4 : [QuickTimeKillEnemyEvent],
         5 : RaidBossEvent,
         6 : MoveToTargetEvent
         
@@ -298,7 +298,7 @@ class EventManager
     constructor(game : Game)
     {
         this.currentEvents = new Map<number, GameEvent>();
-        this.timeToNextEvent = 10;
+        this.timeToNextEvent = 5;
         this.game = game;
         if(game.players.size > 1) this.pendingEvent = [0, 2, 4, 6];
         else this.pendingEvent = [0, 2, 4];
@@ -330,7 +330,7 @@ class EventManager
             if(index == 4) ev = new this.eventList[4][GetRandom(0, this.eventList[4].length - 1)](this.game);
             else ev = new this.eventList[index](this.game);
             this.currentEvents.set(ev.id, ev);
-            this.timeToNextEvent =  GetRandom(30,50);
+            this.timeToNextEvent =  GetRandom(30,40);
         }
     }
 
