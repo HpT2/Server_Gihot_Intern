@@ -293,6 +293,7 @@ class EventManager
         6 : MoveToTargetEvent
         
     };
+    event2Removed : boolean = false;
 
     constructor(game : Game)
     {
@@ -356,6 +357,20 @@ class EventManager
     {
         // console.log(json);
         this.currentEvents.get(json.id)?.Process(json);
+    }
+
+    RemoveEvent2()
+    {
+        if(this.event2Removed) return;
+        this.pendingEvent.splice(this.pendingEvent.indexOf(2), 1);
+        this.event2Removed = true;
+    }
+
+    AddEvent2()
+    {
+        if(!this.event2Removed) return;
+        this.pendingEvent.push(2);
+        this.event2Removed = false;
     }
 }
 

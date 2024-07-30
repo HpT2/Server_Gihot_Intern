@@ -33,10 +33,11 @@ export async function Update(id : string, field : string[], value: any[])
         updateField.push(`${field[i]}=${value[i]}`);
     }
     updateField = updateField.join(',');
-    let query = `Update \`characterInfo\` set ${updateField} where id=${id}`;
+    let query = `Update \`characterInfo\` set ${updateField} where id='${id}'`;
     //console.log(query);
     return new Promise((resolve, reject) => {
         dbConnect.query(query, (err : any, res : any) => {
+            //console.log(query, err, res);
             resolve(res);
         })
     })
@@ -227,7 +228,7 @@ if (isMainThread) {
     function HandlePing(json : any)
     {
         let pingData = {
-            event_name : "pong"
+            event_name : "pong",
         }
 
         worker.postMessage({ socketId: json.sessionId, data: pingData });
@@ -385,7 +386,7 @@ if (isMainThread) {
         
         let sessionInfo = {
             event_name: "provide session id",
-            id: socketId
+            id: socketId,
         }
 
         sessions.set(socketId, customSocket);

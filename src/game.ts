@@ -3,7 +3,7 @@ import Room from "./room";
 import Creep from "./creep";
 import PowerUp from "./power_up";
 import EventManager from "./event";
-import { TICK_RATE } from "../start_server2";
+import { TICK_RATE, Update } from "../start_server2";
 class Game {
 
     players : Map<string, Player>;
@@ -17,7 +17,7 @@ class Game {
     resumeFromPause = false;
     doneSpawning = 0;
     score : Map<string, number>;
-    gameState : any;
+    gameState : any = {};
     isPause : boolean = false;
     isLevelUp : boolean = false;
     eventManager : EventManager;
@@ -28,7 +28,7 @@ class Game {
     constructor(players : Map<string, Player>, room : Room)
     {
         this.players = players; 
-        this.eventManager = new EventManager(this);
+        this.eventManager = new EventManager(this); 
         this.room = room;
         let i : number = 0;
         this.score = new Map<string, number>();
@@ -126,7 +126,11 @@ class Game {
             if(player.isImmutable > 0) {
                 player.isImmutable -= TICK_RATE;
             }
-            if(player.isDead) numDead++;
+            if(player.isDead) 
+            {
+                numDead++;
+                this.eventManager.RemoveEvent2();
+            }
         }); 
 
         if(numDead == this.players.size)
@@ -238,7 +242,13 @@ class Game {
             result : this.GetScore()
         }
 
-        if(state == 0) this.EmitToAllPlayer(worker, dataDone);
+        if(state == 0) 
+        {
+            this.EmitToAllPlayer(worker, dataDone);
+            this.players.forEach((player) => {
+                Update(player.id, ["coin"], [this.score.get(player.id)]);
+            })
+        }
 
         this.room.Done(state);
     }
@@ -355,6 +365,13 @@ class Game {
             
             revivePlayer.isDead = false;
             revivePlayer.isImmutable = 1;
+            
+            for(const [key, player] of this.players)
+            {
+                if(player.isDead) return;
+            }
+
+            this.eventManager.AddEvent2();
             //console.log(revivePlayer.isDead);
         }
     }

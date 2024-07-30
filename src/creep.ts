@@ -75,8 +75,12 @@ class Creep{
         if (roomInfoForSpawnCreep == undefined) return;
 
         if (!roomInfoForSpawnCreep.keepSpawns) return;
+        
+        
 
         const game_state = rooms.get(room_id)?.game?.gameState;
+        
+        if(!game_state) return;
 
         if (!game_state.creep_spawn_infos) {
             game_state.creep_spawn_infos = [];
