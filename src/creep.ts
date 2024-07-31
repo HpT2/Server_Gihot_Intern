@@ -21,8 +21,13 @@ class Creep{
     creepsToSpawn: CreepSpawnInfo[];
     roomInfosForSpawnCreep: Map<string, {
         timeStart: number;
-        keepSpawns: boolean;
         creeps_manage: boolean[]; 
+        timeOutList: {
+            startTime: number;
+            timeRemain: number;
+            timeOut: ReturnType<typeof setTimeout>;
+            creepId: number;
+        }[];
     }>;
     private static instance: Creep;
 
@@ -40,8 +45,13 @@ class Creep{
 
         this.roomInfosForSpawnCreep = new Map<string, {
             timeStart: number;
-            keepSpawns: boolean;
             creeps_manage: boolean[];
+            timeOutList: {
+                startTime: number;
+                timeRemain: number;
+                timeOut: ReturnType<typeof setTimeout>;
+                creepId: number;
+            }[];
         }>;
     }  
     
@@ -55,28 +65,52 @@ class Creep{
     public OnGameStart(room_id: string) {
         this.roomInfosForSpawnCreep.set(room_id, {
             timeStart: Date.now(),
-            keepSpawns: true,
-            creeps_manage: []
+            creeps_manage: [],
+            timeOutList: []
         })
+    }
+
+    public OnGamePause(room_id: string) {
+        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
+        if (roomInfoForSpawnCreep == undefined) return;
+
+        roomInfoForSpawnCreep.timeOutList.forEach(timeOut => {
+            timeOut.timeRemain -= Date.now() - timeOut.startTime;
+            clearTimeout(timeOut.timeOut);
+        });
+    }
+
+    public OnGameResume(room_id: string) {
+        const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
+        if (roomInfoForSpawnCreep == undefined) return;
+
+        roomInfoForSpawnCreep.timeOutList.forEach(timeOut => {
+            if (timeOut.timeRemain > 0) {     
+                timeOut.timeOut = setTimeout(() => { this.SpawnCreepByIdRepeat(timeOut.creepId, room_id) }, timeOut.timeRemain);
+                timeOut.startTime = Date.now();
+            }
+        });
     }
 
     public OnGameEnd(room_id: string) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
-        
         if (roomInfoForSpawnCreep == undefined) return;
 
-        roomInfoForSpawnCreep.keepSpawns = false;
+        roomInfoForSpawnCreep.timeOutList.forEach(timeOut => {
+            if (timeOut) {
+                clearTimeout(timeOut.timeOut);
+            }
+        });
+
+        this.roomInfosForSpawnCreep.delete(room_id);
     } 
 
+    private SpawnCreepByIdRepeat(id: number, room_id: string): void {
+        console.log("spawn" + id); 
 
-    private SpawnCreepByIdRepeat(id: number, room_id: string) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
         
         if (roomInfoForSpawnCreep == undefined) return;
-
-        if (!roomInfoForSpawnCreep.keepSpawns) return;
-        
-        
 
         const game_state = rooms.get(room_id)?.game?.gameState;
         
@@ -101,19 +135,29 @@ class Creep{
         }
 
         const randomDelay = GetRandom(this.creepsToSpawn[id].minSpawnIntervalTime, this.creepsToSpawn[id].maxSpawnIntervalTime); 
-        setTimeout(() => { this.SpawnCreepByIdRepeat(id, room_id) }, randomDelay);
+        const timeoutId: ReturnType<typeof setTimeout> = setTimeout(() => { this.SpawnCreepByIdRepeat(id, room_id) }, randomDelay);
+        roomInfoForSpawnCreep.timeOutList.push({
+            startTime: Date.now(),
+            timeRemain: randomDelay,
+            timeOut: timeoutId,
+            creepId: id
+        });
     }
 
     public StartSpawnProcess(room_id: string) {
         const roomInfoForSpawnCreep = this.roomInfosForSpawnCreep.get(room_id);
         if (roomInfoForSpawnCreep == undefined) return;
-
-        roomInfoForSpawnCreep.keepSpawns = true;
         
         for (let i = 0; i < this.creepsToSpawn.length; i++) {
-            setTimeout(() => {
+            const timeoutId: ReturnType<typeof setTimeout> = setTimeout(() => {
                 this.SpawnCreepByIdRepeat(i, room_id)
-            }, this.creepsToSpawn[i].startSpawnTime);
+            }, this.creepsToSpawn[i].startSpawnTime); 
+            roomInfoForSpawnCreep.timeOutList.push({
+                startTime: Date.now(),
+                timeRemain: this.creepsToSpawn[i].startSpawnTime,
+                timeOut: timeoutId,
+                creepId: i
+            })
         }
     }
 

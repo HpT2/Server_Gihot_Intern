@@ -102,7 +102,7 @@ class Game {
             else {
                 this.isPause = false;
                 this.resumeFromPause = false;
-                Creep.getInstance().StartSpawnProcess(worker);
+                Creep.getInstance().OnGameResume(this.room.id);
             }
         }
         if (this.isPause) return;
@@ -288,7 +288,7 @@ class Game {
 
         this.isLevelUp = true;
         this.isPause = true;
-        Creep.getInstance().OnGameEnd(this.room.id);
+        Creep.getInstance().OnGamePause(this.room.id);
 
     }
 
@@ -322,7 +322,7 @@ class Game {
 
     HandlePause(worker: any, json: any) {
         this.isPause = true;
-        Creep.getInstance().OnGameEnd(this.room.id);
+        Creep.getInstance().OnGamePause(this.room.id);
     }
 
     HandleRevive(worker: any, json: any) {
