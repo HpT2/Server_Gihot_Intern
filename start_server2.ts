@@ -328,14 +328,18 @@ if (isMainThread) {
         let sumBuffer : Buffer = bufferStream.subarray(maxDataLength + length, maxDataLength + length + 1);
         let sumData : number = parseInt(sumBuffer.toString("hex"), 16);
 
-        bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
-        release();
+        
+        
 
         if(!checkSum(dataBuffer, sumData))
         {
             console.log("check sum failed with corrupted data: " + data);
+            bufferStream = Buffer.from(''); 
+            release();
             return;
         } 
+        bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
+        release();
         // else 
         // {
         //     //bufferStream = bufferStream.subarray(maxDataLength + length + 1, bufferStream.length);
